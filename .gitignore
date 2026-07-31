@@ -1,0 +1,32 @@
+# IDEs
+.idea/
+.vscode/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local Env Files
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+.env.*.development
+.env.*.production
+
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+.output/
+.vinxi/
+.tanstack/
+.nitro/
+
+# Logs
+*.log
