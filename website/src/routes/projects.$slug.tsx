@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { getProjectBySlug, submitEnquiry, submitSiteVisit } from "@/lib/supabase.functions";
 import { SITE, formatINR, formatPricePerSqYd } from "@/lib/site";
 import type { Plot, ProjectWithPlots } from "@/lib/types";
+import { UnifiedMediaGallery } from "@/components/UnifiedMediaGallery";
 
 export const Route = createFileRoute("/projects/$slug")({
   loader: async ({ context, params }) => {
@@ -33,23 +34,28 @@ export const Route = createFileRoute("/projects/$slug")({
     if (!loaderData) {
       return {
         meta: [
-          { title: "Project not found — HanRao Realty" },
+          { title: "Project not found — HanRao Prime Portal" },
           { name: "robots", content: "noindex" },
         ],
       };
     }
     const p = loaderData;
-    const location = [p.village, p.district].filter(Boolean).join(", ");
-    const desc = `${p.name} in ${location}. ${p.approval_types.join(", ")} approved. ${p.description.slice(0, 120)}`;
+    const location = [p.village, p.city, p.district, p.state].filter(Boolean).join(", ");
+    const approvalText = (p.approval_types || []).length > 0 ? `${p.approval_types.join(", ")} Approved ` : "";
+    const pageTitle = `${p.name} | ${approvalText}Open Plots in ${p.city || p.district || "Telangana"}`;
+    const desc = `${p.name} in ${location}. ${approvalText}premium open plots available. ${p.description?.slice(0, 150) || ""}`;
+
     return {
       meta: [
-        { title: `${p.name} — ${location} · HanRao Realty` },
+        { title: pageTitle },
         { name: "description", content: desc },
-        { property: "og:title", content: `${p.name} — ${location}` },
+        { property: "og:title", content: pageTitle },
         { property: "og:description", content: desc },
-        { property: "og:type", content: "article" },
+        { property: "og:type", content: "website" },
         ...(p.thumbnail_url ? [{ property: "og:image", content: p.thumbnail_url }] : []),
         { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: pageTitle },
+        { name: "twitter:description", content: desc },
       ],
       links: [{ rel: "canonical", href: `/projects/${p.slug}` }],
       scripts: [
@@ -57,16 +63,22 @@ export const Route = createFileRoute("/projects/$slug")({
           type: "application/ld+json",
           children: JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "Product",
+            "@type": "RealEstateListing",
             name: p.name,
-            description: p.description?.slice(0, 300),
-            image: p.gallery_urls?.[0] ?? p.thumbnail_url,
-            offers: {
-              "@type": "Offer",
-              priceCurrency: "INR",
-              availability: "https://schema.org/InStock",
+            description: desc,
+            url: `https://hanrao.in/projects/${p.slug}`,
+            image: p.thumbnail_url || p.gallery_urls?.[0],
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: p.city || p.district,
+              addressRegion: p.state || "Telangana",
+              addressCountry: "IN",
             },
-            brand: { "@type": "Brand", name: "HanRao Realty" },
+            offeredBy: {
+              "@type": "RealEstateAgent",
+              name: "HanRao Realty",
+              url: "https://hanrao.in",
+            },
           }),
         },
       ],
@@ -95,9 +107,7 @@ function ProjectDetailPage() {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ title: p.name, url });
-      } catch {
-        /* user cancelled */
-      }
+      } catch {}
     } else if (url) {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard");
@@ -105,10 +115,12 @@ function ProjectDetailPage() {
   };
 
   return (
-    <div>
-      <Gallery
-        images={[...(p.gallery_urls || []), p.thumbnail_url].filter(Boolean) as string[]}
-        name={p.name}
+    <div className="space-y-8">
+      <UnifiedMediaGallery
+        projectName={p.name}
+        images={[p.thumbnail_url, ...(p.gallery_urls || [])].filter(Boolean) as string[]}
+        videoUrl={p.video_url || undefined}
+        brochureUrl={p.brochure_url || undefined}
       />
 
       <div className="container-luxe grid gap-10 py-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:py-14">

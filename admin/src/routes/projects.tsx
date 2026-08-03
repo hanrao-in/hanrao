@@ -20,7 +20,13 @@ import {
   Eye,
   Layers,
   Filter,
+  RotateCcw,
+  Archive,
 } from "lucide-react";
+import { ImageUploadGallery } from "@/components/ui/ImageUploadGallery";
+import { BrochureUploader } from "@/components/ui/BrochureUploader";
+import { VideoUploader } from "@/components/ui/VideoUploader";
+import { LocationCombobox } from "@/components/ui/LocationCombobox";
 
 export const Route = createFileRoute("/projects")({
   ssr: false,
@@ -51,6 +57,8 @@ const EMPTY: ProjectForm = {
   amenities: [],
   gallery_urls: [],
   brochure_url: "",
+  video_url: "",
+  video_urls: [],
   location_link: "",
   rera_number: "",
 };
@@ -441,6 +449,14 @@ function Projects() {
                 </div>
               </div>
 
+              <LocationCombobox
+                village={form.village || ""}
+                city={form.city || ""}
+                district={form.district || ""}
+                state={form.state || "Telangana"}
+                onSelect={(loc) => setForm((f) => ({ ...f, ...loc }))}
+              />
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -502,7 +518,7 @@ function Projects() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                   <span>Cover Thumbnail Image</span>
                   <span className="text-[10px] font-normal text-muted-foreground">
-                    Pick from Gallery or System
+                    Main card cover image
                   </span>
                 </label>
                 <div className="mt-1 flex items-center gap-3">
@@ -531,9 +547,7 @@ function Projects() {
                     <label className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-secondary cursor-pointer transition-colors">
                       <Upload className="h-3.5 w-3.5 text-primary" />
                       <span>
-                        {form.thumbnail_url
-                          ? "Change Photo from Gallery"
-                          : "Upload from Gallery / Files"}
+                        {form.thumbnail_url ? "Change Cover Photo" : "Upload Cover Photo"}
                       </span>
                       <input
                         type="file"
@@ -542,8 +556,8 @@ function Projects() {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          if (file.size > 8 * 1024 * 1024) {
-                            toast.error("Image must be under 8 MB");
+                          if (file.size > 10 * 1024 * 1024) {
+                            toast.error("Image must be under 10 MB");
                             return;
                           }
                           const reader = new FileReader();
@@ -566,120 +580,28 @@ function Projects() {
                 </div>
               </div>
 
-              {/* Gallery Images (Multi-file select) */}
+              {/* Gallery Images (Multi-file select with Cards) */}
               <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Project Gallery Photos
-                  </label>
-                  <label className="inline-flex items-center gap-1.5 text-xs text-primary font-medium cursor-pointer hover:underline">
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>Upload Gallery Photos</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (!files.length) return;
-                        files.forEach((file) => {
-                          if (file.size > 8 * 1024 * 1024) {
-                            toast.error(`"${file.name}" is over 8 MB`);
-                            return;
-                          }
-                          const reader = new FileReader();
-                          reader.onload = (ev) => {
-                            const res = ev.target?.result as string;
-                            if (res) {
-                              setForm((f) => ({
-                                ...f,
-                                gallery_urls: [...(f.gallery_urls || []), res],
-                              }));
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        });
-                        e.target.value = "";
-                      }}
-                    />
-                  </label>
-                </div>
-
-                {/* Gallery photo thumbnails */}
-                {(form.gallery_urls || []).length > 0 && (
-                  <div className="mt-2 grid grid-cols-4 gap-2">
-                    {(form.gallery_urls || []).map((url, idx) => (
-                      <div
-                        key={idx}
-                        className="relative aspect-square rounded-lg overflow-hidden border border-border group bg-muted"
-                      >
-                        <img
-                          src={url}
-                          alt={`Gallery photo ${idx + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setForm((f) => ({
-                              ...f,
-                              gallery_urls: (f.gallery_urls || []).filter((_, i) => i !== idx),
-                            }))
-                          }
-                          className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity text-white"
-                        >
-                          <X className="h-5 w-5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <textarea
-                  value={galleryInput}
-                  onChange={(e) => setGalleryInput(e.target.value)}
-                  rows={2}
-                  placeholder="Or paste comma-separated image URLs (https://...)"
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs outline-none focus:border-primary"
-                />
-              </div>
-
-              {/* Brochure URL & Direct File upload */}
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                  <span>Brochure (PDF / Image)</span>
-                  <label className="text-xs text-primary font-medium cursor-pointer hover:underline flex items-center gap-1">
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>Upload File</span>
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (file.size > 15 * 1024 * 1024) {
-                          toast.error("Brochure file must be under 15 MB");
-                          return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (ev) =>
-                          setForm((f) => ({ ...f, brochure_url: ev.target?.result as string }));
-                        reader.readAsDataURL(file);
-                        e.target.value = "";
-                      }}
-                    />
-                  </label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+                  Project Gallery Photos (Async Cards)
                 </label>
-                <input
-                  type="text"
-                  value={form.brochure_url || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, brochure_url: e.target.value }))}
-                  placeholder="Paste Brochure URL (https://...) or upload file above"
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                <ImageUploadGallery
+                  urls={form.gallery_urls || []}
+                  onChange={(urls) => setForm((f) => ({ ...f, gallery_urls: urls }))}
                 />
               </div>
+
+              {/* Brochure Uploader */}
+              <BrochureUploader
+                value={form.brochure_url || ""}
+                onChange={(url) => setForm((f) => ({ ...f, brochure_url: url }))}
+              />
+
+              {/* Video Uploader */}
+              <VideoUploader
+                value={form.video_url || ""}
+                onChange={(url) => setForm((f) => ({ ...f, video_url: url }))}
+              />
 
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

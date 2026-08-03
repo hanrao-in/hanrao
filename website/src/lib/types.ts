@@ -13,6 +13,10 @@ export type Project = {
   map_lng: number | null;
   map_embed_url: string | null;
   brochure_url: string | null;
+  video_url?: string | null;
+  video_urls?: string[];
+  location_link?: string;
+  rera_number?: string;
   status: "active" | "upcoming" | "sold_out";
   approval_types: string[];
   amenities: string[];
@@ -23,6 +27,8 @@ export type Project = {
     airport_km?: number;
   };
   featured: boolean;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   created_at: string;
 };
 

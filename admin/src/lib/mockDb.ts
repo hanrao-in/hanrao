@@ -19,8 +19,12 @@ export type Project = {
   amenities: string[];
   gallery_urls?: string[];
   brochure_url?: string;
+  video_url?: string;
+  video_urls?: string[];
   location_link?: string;
   rera_number?: string;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   created_at: string;
 };
 

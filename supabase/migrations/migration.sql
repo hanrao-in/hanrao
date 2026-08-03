@@ -100,6 +100,8 @@ create table if not exists public.projects (
   map_lng numeric,
   map_embed_url text,
   brochure_url text,
+  video_url text,
+  video_urls text[] not null default '{}',
   status text not null default 'active' check (status in ('active', 'upcoming', 'sold_out')),
   approval_types text[] not null default '{}',
   amenities text[] not null default '{}',
@@ -107,6 +109,8 @@ create table if not exists public.projects (
   featured boolean not null default false,
   location_id text references public.locations(id) on delete set null,
   rera_number text,
+  deleted_at timestamptz,
+  deleted_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -374,7 +378,8 @@ values
   ('projects', 'projects', true),
   ('plots', 'plots', true),
   ('avatars', 'avatars', true),
-  ('documents', 'documents', false)
+  ('documents', 'documents', true),
+  ('videos', 'videos', true)
 on conflict (id) do nothing;
 
 -- storage.objects policy drop / creation
@@ -384,7 +389,10 @@ drop policy if exists "Allow public read for plots storage" on storage.objects;
 drop policy if exists "Allow admins upload for plots storage" on storage.objects;
 drop policy if exists "Allow public read for avatars storage" on storage.objects;
 drop policy if exists "Allow users upload for avatars storage" on storage.objects;
+drop policy if exists "Allow public read for documents storage" on storage.objects;
 drop policy if exists "Allow admins access for documents storage" on storage.objects;
+drop policy if exists "Allow public read for videos storage" on storage.objects;
+drop policy if exists "Allow admins upload for videos storage" on storage.objects;
 
 create policy "Allow public read for projects storage" on storage.objects for select using (bucket_id = 'projects');
 create policy "Allow admins upload for projects storage" on storage.objects for all using (bucket_id = 'projects' and public.has_role('admin'));
@@ -395,4 +403,42 @@ create policy "Allow admins upload for plots storage" on storage.objects for all
 create policy "Allow public read for avatars storage" on storage.objects for select using (bucket_id = 'avatars');
 create policy "Allow users upload for avatars storage" on storage.objects for all using (bucket_id = 'avatars' and (auth.uid() is not null));
 
+create policy "Allow public read for documents storage" on storage.objects for select using (bucket_id = 'documents');
 create policy "Allow admins access for documents storage" on storage.objects for all using (bucket_id = 'documents' and public.has_role('admin'));
+
+create policy "Allow public read for videos storage" on storage.objects for select using (bucket_id = 'videos');
+create policy "Allow admins upload for videos storage" on storage.objects for all using (bucket_id = 'videos' and public.has_role('admin'));
+
+-- ── 7. TRIGRAM INDEX & SEARCH RPC FUNCTION ───────────────────────────────
+create extension if not exists pg_trgm;
+
+create index if not exists idx_projects_trgm on public.projects using gin ((name || ' ' || slug || ' ' || village || ' ' || city || ' ' || district || ' ' || state) gin_trgm_ops);
+create index if not exists idx_projects_deleted on public.projects(deleted_at) where deleted_at is null;
+
+create or replace function public.search_projects_v2(search_term text, max_limit int default 20)
+returns setof public.projects language sql stable as $$
+  select *
+  from public.projects
+  where deleted_at is null
+    and (
+      search_term is null 
+      or search_term = ''
+      or name ilike '%' || search_term || '%'
+      or slug ilike '%' || search_term || '%'
+      or village ilike '%' || search_term || '%'
+      or city ilike '%' || search_term || '%'
+      or district ilike '%' || search_term || '%'
+      or state ilike '%' || search_term || '%'
+      or exists (
+        select 1 from unnest(approval_types) a where a ilike '%' || search_term || '%'
+      )
+      or exists (
+        select 1 from unnest(amenities) am where am ilike '%' || search_term || '%'
+      )
+    )
+  order by 
+    case when name ilike search_term || '%' then 0 else 1 end,
+    created_at desc
+  limit max_limit;
+$$;
+

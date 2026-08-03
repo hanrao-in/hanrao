@@ -123,7 +123,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
-      { rel: "manifest", href: "/manifest.json" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       // ── Canonical ────────────────────────────────────────────────────────────
       { rel: "canonical", href: "https://hanrao.in" },
     ],
@@ -171,20 +171,32 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col">
-        <SiteHeader />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <SiteFooter />
-        <FloatingActions />
-        <Toaster position="top-center" richColors />
-      </div>
+      <ErrorBoundary>
+        <div className="flex min-h-screen flex-col overflow-x-hidden">
+          <OfflineBanner />
+          <SiteHeader />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <SiteFooter />
+          <FloatingActions />
+          <Toaster position="top-center" richColors />
+        </div>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

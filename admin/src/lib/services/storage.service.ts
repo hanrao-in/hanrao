@@ -13,6 +13,41 @@ export class StorageService {
   }
 
   /**
+   * Extract bucket name and file path from a Supabase public Storage URL
+   */
+  parseStorageUrl(url: string): { bucket: string; filePath: string } | null {
+    if (!url || !url.includes("/storage/v1/object/public/")) return null;
+    try {
+      const parts = url.split("/storage/v1/object/public/")[1]?.split("/");
+      if (!parts || parts.length < 2) return null;
+      const bucket = parts[0];
+      const filePath = parts.slice(1).join("/");
+      return { bucket, filePath };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Deletes a file from Supabase Storage and media catalog by its public URL.
+   */
+  async deleteByUrl(url: string): Promise<boolean> {
+    if (!url) return false;
+    const parsed = this.parseStorageUrl(url);
+    if (!parsed) return false;
+
+    try {
+      const { bucket, filePath } = parsed;
+      await this.client.storage.from(bucket).remove([filePath]);
+      await this.client.from("media").delete().eq("url", url);
+      return true;
+    } catch (err) {
+      console.warn("[StorageService.deleteByUrl failed]", err);
+      return false;
+    }
+  }
+
+  /**
    * Uploads base64 image data to the given bucket, returns public URL.
    * If value is already an HTTP(S) URL, returns it as-is.
    */
@@ -35,7 +70,7 @@ export class StorageService {
       }
 
       const header = value.substring(0, commaIndex);
-      const base64Data = value.substring(commaIndex + 1).replace(/\s/g, ""); // Strip line breaks/whitespace
+      const base64Data = value.substring(commaIndex + 1).replace(/\s/g, "");
       const buffer = Buffer.from(base64Data, "base64");
 
       const match = header.match(/^data:([^;]+);base64$/);
@@ -43,25 +78,31 @@ export class StorageService {
         throw new Error("Invalid base64 header structure.");
       }
 
-      const contentType = match[1]; // e.g. "image/png" or "application/octet-stream"
+      const contentType = match[1]; // e.g. "image/png", "image/webp", "application/pdf", "video/mp4"
 
-      // Validate size (10MB limit)
-      if (buffer.length > 10 * 1024 * 1024) {
-        throw new Error("Image size exceeds maximum 10MB limit.");
+      // Validate size (Images: 10MB, Videos: 50MB, Documents: 15MB)
+      const isVideo = contentType.startsWith("video/");
+      const isPdf = contentType.includes("pdf");
+      const maxSize = isVideo ? 50 * 1024 * 1024 : isPdf ? 15 * 1024 * 1024 : 10 * 1024 * 1024;
+
+      if (buffer.length > maxSize) {
+        throw new Error(`File size exceeds maximum ${maxSize / (1024 * 1024)}MB limit.`);
       }
 
       // Determine extension
       let ext = "png";
       if (contentType.includes("jpeg") || contentType.includes("jpg")) ext = "jpg";
-      else if (contentType.includes("gif")) ext = "gif";
       else if (contentType.includes("webp")) ext = "webp";
-      else if (contentType.includes("svg")) ext = "svg";
+      else if (contentType.includes("pdf")) ext = "pdf";
+      else if (contentType.includes("mp4")) ext = "mp4";
+      else if (contentType.includes("quicktime") || contentType.includes("mov")) ext = "mov";
+      else if (contentType.includes("webm")) ext = "webm";
 
       const filename = `${randomUUID()}.${ext}`;
       const filePath = `uploads/${filename}`;
 
-      // Upload binary to Supabase Storage using admin client (bypasses RLS write restriction)
-      const { data, error } = await this.client.storage.from(bucketName).upload(filePath, buffer, {
+      // Upload binary to Supabase Storage
+      const { error } = await this.client.storage.from(bucketName).upload(filePath, buffer, {
         contentType,
         upsert: true,
       });
@@ -75,7 +116,7 @@ export class StorageService {
         data: { publicUrl },
       } = this.client.storage.from(bucketName).getPublicUrl(filePath);
 
-      // Record in the media table catalog
+      // Record in media catalog table
       await this.client.from("media").insert({
         url: publicUrl,
         bucket: bucketName,

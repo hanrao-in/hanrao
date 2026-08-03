@@ -122,13 +122,19 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster position="top-center" richColors />
+      <ErrorBoundary>
+        <OfflineBanner />
+        <Outlet />
+        <Toaster position="top-center" richColors />
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }
