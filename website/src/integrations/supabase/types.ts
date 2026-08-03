@@ -353,6 +353,12 @@ export type Database = {
           status: string;
           thumbnail_url: string;
           village: string;
+          video_url: string | null;
+          video_urls: string[] | null;
+          updated_at: string | null;
+          updated_by: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
         };
         Insert: {
           amenities?: string[];
@@ -376,6 +382,12 @@ export type Database = {
           status?: string;
           thumbnail_url?: string;
           village?: string;
+          video_url?: string | null;
+          video_urls?: string[] | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
         };
         Update: {
           amenities?: string[];
@@ -399,6 +411,12 @@ export type Database = {
           status?: string;
           thumbnail_url?: string;
           village?: string;
+          video_url?: string | null;
+          video_urls?: string[] | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
         };
         Relationships: [
           {
