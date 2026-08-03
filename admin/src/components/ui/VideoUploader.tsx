@@ -3,6 +3,8 @@ import { Video, Upload, Link, X, Play, Loader2 } from "lucide-react";
 import { validateVideoFile } from "@/lib/imagePipeline";
 import { toast } from "sonner";
 
+import { supabase } from "@/integrations/supabase/client";
+
 interface Props {
   value?: string;
   onChange: (url: string) => void;
@@ -10,10 +12,11 @@ interface Props {
 
 export function VideoUploader({ value = "", onChange }: Props) {
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [inputUrl, setInputUrl] = useState("");
   const [tab, setTab] = useState<"file" | "url">("file");
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     const val = validateVideoFile(file, 50);
     if (!val.valid) {
       toast.error(val.error);
@@ -21,20 +24,32 @@ export function VideoUploader({ value = "", onChange }: Props) {
     }
 
     setLoading(true);
-    const reader = new FileReader();
-    reader.onerror = () => {
+    setProgress(10);
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const filePath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+
+      // Perform direct chunked binary upload to Supabase storage
+      setProgress(30);
+      const { data, error } = await supabase.storage.from("videos").upload(filePath, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+      if (error) throw error;
+      setProgress(80);
+
+      const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filePath);
+      setProgress(100);
+
+      onChange(publicUrl);
+      toast.success(`Video "${file.name}" uploaded successfully.`);
+    } catch (err: any) {
+      toast.error(`Video upload failed: ${err.message || "Unknown error"}`);
+    } finally {
       setLoading(false);
-      toast.error("Failed to read video file.");
-    };
-    reader.onload = (e) => {
-      setLoading(false);
-      const res = e.target?.result as string;
-      if (res) {
-        onChange(res);
-        toast.success(`Video "${file.name}" attached.`);
-      }
-    };
-    reader.readAsDataURL(file);
+      setProgress(0);
+    }
   };
 
   const applyUrl = () => {
@@ -131,12 +146,22 @@ export function VideoUploader({ value = "", onChange }: Props) {
                 }}
               />
               {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <div className="w-full max-w-[200px] space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <span className="text-[11px] font-semibold text-primary">Uploading ({progress}%)</span>
+                  </div>
+                  <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
               ) : (
-                <Video className="h-6 w-6 text-muted-foreground/60" />
+                <>
+                  <Video className="h-6 w-6 text-muted-foreground/60" />
+                  <p className="mt-1 text-xs font-medium text-foreground">Click to upload Video File</p>
+                  <p className="text-[10px] text-muted-foreground">MP4, MOV, WEBM up to 50MB</p>
+                </>
               )}
-              <p className="mt-1 text-xs font-medium text-foreground">Click to upload Video File</p>
-              <p className="text-[10px] text-muted-foreground">MP4, MOV, WEBM up to 50MB</p>
             </label>
           ) : (
             <div className="flex gap-2">

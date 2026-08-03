@@ -185,7 +185,7 @@ function SiteVisitsAll() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-card shadow-soft ring-1 ring-border">
+        <div className="table-responsive-container rounded-2xl bg-card shadow-soft ring-1 ring-border">
           <table className="w-full text-sm">
             <thead className="bg-secondary text-xs uppercase tracking-wider text-muted-foreground">
               <tr>

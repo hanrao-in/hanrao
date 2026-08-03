@@ -27,6 +27,8 @@ import { ImageUploadGallery } from "@/components/ui/ImageUploadGallery";
 import { BrochureUploader } from "@/components/ui/BrochureUploader";
 import { VideoUploader } from "@/components/ui/VideoUploader";
 import { LocationCombobox } from "@/components/ui/LocationCombobox";
+import { supabase } from "@/integrations/supabase/client";
+import { processImagePipeline } from "@/lib/imagePipeline";
 
 export const Route = createFileRoute("/projects")({
   ssr: false,
@@ -71,6 +73,7 @@ function Projects() {
   const [modal, setModal] = useState<null | "create" | Project>(null);
   const [form, setForm] = useState<ProjectForm>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
 
   const [approvalsInput, setApprovalsInput] = useState("");
   const [amenitiesInput, setAmenitiesInput] = useState("");
@@ -570,26 +573,56 @@ function Projects() {
 
                   <div className="flex-1 space-y-2">
                     <label className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-secondary cursor-pointer transition-colors">
-                      <Upload className="h-3.5 w-3.5 text-primary" />
+                      {uploadingThumbnail ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                      ) : (
+                        <Upload className="h-3.5 w-3.5 text-primary" />
+                      )}
                       <span>
-                        {form.thumbnail_url ? "Change Cover Photo" : "Upload Cover Photo"}
+                        {uploadingThumbnail ? "Uploading..." : form.thumbnail_url ? "Change Cover Photo" : "Upload Cover Photo"}
                       </span>
                       <input
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           if (file.size > 10 * 1024 * 1024) {
                             toast.error("Image must be under 10 MB");
                             return;
                           }
-                          const reader = new FileReader();
-                          reader.onload = (ev) =>
-                            setForm((f) => ({ ...f, thumbnail_url: ev.target?.result as string }));
-                          reader.readAsDataURL(file);
-                          e.target.value = "";
+                          setUploadingThumbnail(true);
+                          try {
+                            const processed = await processImagePipeline(file);
+                            const mainBlob = (function (dataUrl: string): Blob {
+                              const arr = dataUrl.split(",");
+                              const mime = arr[0].match(/:(.*?);/)?.[1] || "image/webp";
+                              const bstr = atob(arr[1]);
+                              let n = bstr.length;
+                              const u8arr = new Uint8Array(n);
+                              while (n--) {
+                                u8arr[n] = bstr.charCodeAt(n);
+                              }
+                              return new Blob([u8arr], { type: mime });
+                            })(processed.dataUrl);
+
+                            const mainPath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.webp`;
+                            const { error } = await supabase.storage.from("projects").upload(mainPath, mainBlob, {
+                              contentType: "image/webp",
+                              upsert: true,
+                            });
+                            if (error) throw error;
+
+                            const { data: { publicUrl } } = supabase.storage.from("projects").getPublicUrl(mainPath);
+                            setForm((f) => ({ ...f, thumbnail_url: publicUrl }));
+                            toast.success("Cover photo uploaded successfully.");
+                          } catch (err: any) {
+                            toast.error(`Cover upload failed: ${err.message || "Unknown error"}`);
+                          } finally {
+                            setUploadingThumbnail(false);
+                            e.target.value = "";
+                          }
                         }}
                       />
                     </label>

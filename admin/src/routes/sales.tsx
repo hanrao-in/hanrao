@@ -122,7 +122,8 @@ function Analytics() {
         <div className="px-5 py-4 border-b border-border">
           <h2 className="font-serif text-lg font-semibold">All Bookings</h2>
         </div>
-        <table className="w-full text-sm">
+        <div className="table-responsive-container">
+          <table className="w-full text-sm">
           <thead className="bg-secondary text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">Customer</th>
@@ -167,6 +168,7 @@ function Analytics() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pipeline */}
