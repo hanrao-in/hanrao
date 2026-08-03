@@ -161,6 +161,28 @@ export function ImageUploadGallery({ urls = [], onChange, maxFiles = 20 }: Props
         </p>
       </div>
 
+      {/* Queue Progress Header */}
+      {items.some((i) => i.status === "compressing") && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-primary">
+            <span>
+              Uploading... {Math.round((items.filter((i) => i.status === "ready").length / items.length) * 100)}%
+            </span>
+            <span>
+              {items.filter((i) => i.status === "ready").length} of {items.length} files
+            </span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+            <div
+              className="h-full bg-primary transition-all duration-300"
+              style={{
+                width: `${Math.round((items.filter((i) => i.status === "ready").length / items.length) * 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Gallery Cards Grid */}
       {items.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
