@@ -330,11 +330,8 @@ function ProjectDetailPage() {
             )}
           </Section>
 
-          <Section title="Calculators">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <PriceCalculator defaultPrice={minPrice || 20000} />
-              <EMICalculator defaultPrincipal={minPrice ? minPrice * 200 : 4000000} />
-            </div>
+          <Section title="Price Calculator">
+            <PriceCalculator defaultPrice={minPrice || 20000} />
           </Section>
         </div>
 
@@ -763,77 +760,7 @@ function PriceCalculator({ defaultPrice }: { defaultPrice: number }) {
   );
 }
 
-function EMICalculator({ defaultPrincipal }: { defaultPrincipal: number }) {
-  const [principalStr, setPrincipalStr] = useState(String(defaultPrincipal));
-  const [rateStr, setRateStr] = useState("9");
-  const [yearsStr, setYearsStr] = useState("10");
-  const principal = Number(principalStr) || 0;
-  const rate = Number(rateStr) || 0;
-  const years = Number(yearsStr) || 1;
-  const n = years * 12;
-  const r = rate / 12 / 100;
-  const emi =
-    r === 0 ? principal / n : (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 
-  const handleNumericChange =
-    (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const raw = e.target.value;
-      if (raw === "" || raw === "-") {
-        setter(raw);
-        return;
-      }
-      const parsed = parseFloat(raw);
-      if (!isNaN(parsed)) {
-        setter(String(parsed));
-      }
-    };
-
-  return (
-    <div className="rounded-2xl bg-card p-5 ring-1 ring-border">
-      <h3 className="font-serif text-lg font-semibold">EMI Calculator</h3>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <label className="text-sm">
-          <span className="text-muted-foreground">Amount</span>
-          <input
-            type="number"
-            value={principalStr}
-            min={0}
-            onChange={handleNumericChange(setPrincipalStr)}
-            className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2 text-sm outline-none focus:border-primary"
-          />
-        </label>
-        <label className="text-sm">
-          <span className="text-muted-foreground">Rate %</span>
-          <input
-            type="number"
-            value={rateStr}
-            step="0.1"
-            min={0}
-            onChange={handleNumericChange(setRateStr)}
-            className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2 text-sm outline-none focus:border-primary"
-          />
-        </label>
-        <label className="text-sm">
-          <span className="text-muted-foreground">Years</span>
-          <input
-            type="number"
-            value={yearsStr}
-            min={1}
-            max={30}
-            onChange={handleNumericChange(setYearsStr)}
-            className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2 text-sm outline-none focus:border-primary"
-          />
-        </label>
-      </div>
-      <div className="mt-4 rounded-xl bg-accent/10 p-3">
-        <div className="text-xs uppercase tracking-wider text-muted-foreground">Monthly EMI</div>
-        <div className="mt-1 font-serif text-2xl font-semibold text-accent">
-          {formatINR(Math.round(emi))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function SiteVisitForm({ projectId, projectName }: { projectId: string; projectName?: string }) {
   const [submitting, setSubmitting] = useState(false);

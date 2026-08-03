@@ -37,14 +37,30 @@ export class ProjectRepository extends BaseRepository<Project> {
   }
 
   async listFeatured(limit: number = 6): Promise<Project[]> {
-    const { data, error } = await this.dbClient
+    let { data, error } = await this.dbClient
       .from("projects")
       .select("*")
       .eq("featured", true)
+      .eq("status", "active")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (error) this.handleError(error);
+
+    if (!data || data.length === 0) {
+      // Fallback: list all active projects so home is never blank
+      const res = await this.dbClient
+        .from("projects")
+        .select("*")
+        .eq("status", "active")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (res.error) this.handleError(res.error);
+      data = res.data;
+    }
+
     return (data || []) as Project[];
   }
 }
