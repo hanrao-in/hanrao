@@ -28,7 +28,7 @@ AS $$
       OR city ILIKE '%' || search_term || '%'
       OR district ILIKE '%' || search_term || '%'
       OR state ILIKE '%' || search_term || '%'
-      OR array_to_string(approvals, ' ') ILIKE '%' || search_term || '%'
+      OR array_to_string(approval_types, ' ') ILIKE '%' || search_term || '%'
       OR array_to_string(amenities, ' ') ILIKE '%' || search_term || '%'
     )
   ORDER BY created_at DESC;
