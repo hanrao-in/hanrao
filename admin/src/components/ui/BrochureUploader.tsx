@@ -3,6 +3,8 @@ import { FileText, Upload, Eye, Download, X, Loader2 } from "lucide-react";
 import { validateDocumentFile } from "@/lib/imagePipeline";
 import { toast } from "sonner";
 
+import { supabase } from "@/integrations/supabase/client";
+
 interface Props {
   value?: string;
   onChange: (url: string) => void;
@@ -10,9 +12,10 @@ interface Props {
 
 export function BrochureUploader({ value = "", onChange }: Props) {
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     const val = validateDocumentFile(file, 15);
     if (!val.valid) {
       toast.error(val.error);
@@ -20,20 +23,31 @@ export function BrochureUploader({ value = "", onChange }: Props) {
     }
 
     setLoading(true);
-    const reader = new FileReader();
-    reader.onerror = () => {
+    setProgress(10);
+    try {
+      const ext = file.name.split(".").pop() || "pdf";
+      const filePath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+
+      setProgress(30);
+      const { data, error } = await supabase.storage.from("documents").upload(filePath, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+      if (error) throw error;
+      setProgress(85);
+
+      const { data: { publicUrl } } = supabase.storage.from("documents").getPublicUrl(filePath);
+      setProgress(100);
+
+      onChange(publicUrl);
+      toast.success(`Brochure "${file.name}" uploaded successfully.`);
+    } catch (err: any) {
+      toast.error(`Brochure upload failed: ${err.message || "Unknown error"}`);
+    } finally {
       setLoading(false);
-      toast.error("Failed to read file.");
-    };
-    reader.onload = (e) => {
-      setLoading(false);
-      const res = e.target?.result as string;
-      if (res) {
-        onChange(res);
-        toast.success(`Brochure "${file.name}" attached.`);
-      }
-    };
-    reader.readAsDataURL(file);
+      setProgress(0);
+    }
   };
 
   const isPdf = value.includes("application/pdf") || value.toLowerCase().endsWith(".pdf");
@@ -116,11 +130,25 @@ export function BrochureUploader({ value = "", onChange }: Props) {
               e.target.value = "";
             }}
           />
-          <FileText className="h-6 w-6 text-muted-foreground/60" />
-          <p className="mt-1 text-xs font-medium text-foreground">
-            Click to upload Brochure PDF or Image
-          </p>
-          <p className="text-[10px] text-muted-foreground">PDF, PNG, JPG up to 15MB</p>
+          {loading ? (
+            <div className="w-full max-w-[200px] space-y-2 flex flex-col items-center">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-xs font-semibold text-primary">Uploading ({progress}%)</span>
+              </div>
+              <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+              </div>
+            </div>
+          ) : (
+            <>
+              <FileText className="h-6 w-6 text-muted-foreground/60" />
+              <p className="mt-1 text-xs font-medium text-foreground">
+                Click to upload Brochure PDF or Image
+              </p>
+              <p className="text-[10px] text-muted-foreground">PDF, PNG, JPG up to 15MB</p>
+            </>
+          )}
         </label>
       )}
 

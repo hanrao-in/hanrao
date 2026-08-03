@@ -19,6 +19,20 @@ interface Props {
   maxFiles?: number;
 }
 
+import { supabase } from "@/integrations/supabase/client";
+
+function dataURLtoBlob(dataUrl: string): Blob {
+  const arr = dataUrl.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1] || "image/webp";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+
 export function ImageUploadGallery({ urls = [], onChange, maxFiles = 20 }: Props) {
   const [items, setItems] = useState<GalleryItem[]>(() =>
     urls.map((u, idx) => ({
@@ -66,12 +80,37 @@ export function ImageUploadGallery({ urls = [], onChange, maxFiles = 20 }: Props
 
       try {
         const processed = await processImagePipeline(file);
+        
+        // Convert to binary blobs for client-side direct upload
+        const mainBlob = dataURLtoBlob(processed.dataUrl);
+        const thumbBlob = dataURLtoBlob(processed.thumbnailDataUrl);
+        
+        const mainPath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.webp`;
+        const thumbPath = `uploads/thumb-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.webp`;
+        
+        // Upload main image
+        const { error: mainErr } = await supabase.storage.from("projects").upload(mainPath, mainBlob, {
+          contentType: "image/webp",
+          upsert: true,
+        });
+        if (mainErr) throw mainErr;
+        
+        // Upload thumbnail
+        const { error: thumbErr } = await supabase.storage.from("projects").upload(thumbPath, thumbBlob, {
+          contentType: "image/webp",
+          upsert: true,
+        });
+        if (thumbErr) throw thumbErr;
+        
+        const { data: { publicUrl: mainUrl } } = supabase.storage.from("projects").getPublicUrl(mainPath);
+        const { data: { publicUrl: thumbUrl } } = supabase.storage.from("projects").getPublicUrl(thumbPath);
+
         const idx = newItems.findIndex((i) => i.id === itemId);
         if (idx !== -1) {
           newItems[idx] = {
             ...newItems[idx],
-            url: processed.dataUrl,
-            thumbnailUrl: processed.thumbnailDataUrl,
+            url: mainUrl,
+            thumbnailUrl: thumbUrl,
             status: "ready",
             progress: 100,
           };
@@ -83,12 +122,12 @@ export function ImageUploadGallery({ urls = [], onChange, maxFiles = 20 }: Props
           newItems[idx] = {
             ...newItems[idx],
             status: "error",
-            errorMessage: err.message || "Compression failed",
+            errorMessage: err.message || "Upload failed",
             progress: 0,
           };
           setItems([...newItems]);
         }
-        toast.error(`Failed to process "${file.name}"`);
+        toast.error(`Failed to upload "${file.name}"`);
       }
     }
   };
@@ -119,8 +158,32 @@ export function ImageUploadGallery({ urls = [], onChange, maxFiles = 20 }: Props
     setItems(next);
     try {
       const processed = await processImagePipeline(item.file);
+      
+      const mainBlob = dataURLtoBlob(processed.dataUrl);
+      const thumbBlob = dataURLtoBlob(processed.thumbnailDataUrl);
+      
+      const mainPath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.webp`;
+      const thumbPath = `uploads/thumb-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.webp`;
+      
+      // Upload main image
+      const { error: mainErr } = await supabase.storage.from("projects").upload(mainPath, mainBlob, {
+        contentType: "image/webp",
+        upsert: true,
+      });
+      if (mainErr) throw mainErr;
+      
+      // Upload thumbnail
+      const { error: thumbErr } = await supabase.storage.from("projects").upload(thumbPath, thumbBlob, {
+        contentType: "image/webp",
+        upsert: true,
+      });
+      if (thumbErr) throw thumbErr;
+      
+      const { data: { publicUrl: mainUrl } } = supabase.storage.from("projects").getPublicUrl(mainPath);
+      const { data: { publicUrl: thumbUrl } } = supabase.storage.from("projects").getPublicUrl(thumbPath);
+
       const updated = next.map((i) =>
-        i.id === item.id ? { ...i, url: processed.dataUrl, status: "ready" as const, progress: 100 } : i,
+        i.id === item.id ? { ...i, url: mainUrl, thumbnailUrl: thumbUrl, status: "ready" as const, progress: 100 } : i,
       );
       syncParent(updated);
     } catch (e: any) {
