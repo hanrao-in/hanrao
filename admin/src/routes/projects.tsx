@@ -151,6 +151,8 @@ function Projects() {
       amenities,
       gallery_urls,
       brochure_url: p.brochure_url || "",
+      video_url: p.video_url || "",
+      video_urls: p.video_urls || [],
       location_link: p.location_link || "",
       rera_number: p.rera_number || "",
     });
