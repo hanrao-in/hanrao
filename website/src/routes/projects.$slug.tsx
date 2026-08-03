@@ -120,6 +120,7 @@ function ProjectDetailPage() {
         projectName={p.name}
         images={[p.thumbnail_url, ...(p.gallery_urls || [])].filter(Boolean) as string[]}
         videoUrl={p.video_url || undefined}
+        videoUrls={p.video_urls || []}
         brochureUrl={p.brochure_url || undefined}
       />
 
