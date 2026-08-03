@@ -21,6 +21,9 @@ import {
   FileText,
 } from "lucide-react";
 
+import { CustomerProfileDrawer } from "@/components/admin/CustomerProfileDrawer";
+import { Download } from "lucide-react";
+
 export const Route = createFileRoute("/customers")({
   ssr: false,
   head: () => ({
