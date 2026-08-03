@@ -209,6 +209,31 @@ function Projects() {
     }
   };
 
+  const handleStatusToggle = async (p: Project, newStatus: string) => {
+    const oldStatus = p.status;
+    const typedStatus = newStatus as Project["status"];
+    setItems((prev) => prev.map((item) => (item.id === p.id ? { ...item, status: typedStatus } : item)));
+    try {
+      await adminDb.projects.update(p.id, { status: typedStatus });
+      toast.success(`Status updated to ${newStatus}`);
+    } catch (err: any) {
+      setItems((prev) => prev.map((item) => (item.id === p.id ? { ...item, status: oldStatus } : item)));
+      toast.error(err.message || "Failed to update status");
+    }
+  };
+
+  const handleFeaturedToggle = async (p: Project, newFeatured: boolean) => {
+    const oldFeatured = p.featured;
+    setItems((prev) => prev.map((item) => (item.id === p.id ? { ...item, featured: newFeatured } : item)));
+    try {
+      await adminDb.projects.update(p.id, { featured: newFeatured });
+      toast.success(newFeatured ? "Marked as Featured" : "Removed from Featured");
+    } catch (err: any) {
+      setItems((prev) => prev.map((item) => (item.id === p.id ? { ...item, featured: oldFeatured } : item)));
+      toast.error(err.message || "Failed to update featured state");
+    }
+  };
+
   const statusColor = (s: string) =>
     s === "active"
       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
