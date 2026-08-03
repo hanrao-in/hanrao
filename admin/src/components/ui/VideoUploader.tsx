@@ -140,19 +140,9 @@ export function VideoUploader({ value = "", onChange, onUploadingStateChange }: 
     }
   };
 
-  const handleRemove = async () => {
-    if (value) {
-      const parsed = parseStorageUrl(value);
-      if (parsed && parsed.bucket === "videos") {
-        try {
-          await supabase.storage.from("videos").remove([parsed.filePath]);
-          toast.success("Previous video file removed from storage.");
-        } catch (e) {
-          console.warn("Failed to delete video file from storage", e);
-        }
-      }
-    }
+  const handleRemove = () => {
     onChange("");
+    toast.info("Video removed from form. Save changes to update project.");
   };
 
   const applyUrl = () => {
