@@ -74,6 +74,7 @@ function Projects() {
   const [form, setForm] = useState<ProjectForm>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [approvalsInput, setApprovalsInput] = useState("");
   const [amenitiesInput, setAmenitiesInput] = useState("");
@@ -659,6 +660,7 @@ function Projects() {
               <VideoUploader
                 value={form.video_url || ""}
                 onChange={(url) => setForm((f) => ({ ...f, video_url: url }))}
+                onUploadingStateChange={setUploadingVideo}
               />
 
               <div>
@@ -747,7 +749,7 @@ function Projects() {
               </button>
               <button
                 onClick={save}
-                disabled={saving}
+                disabled={saving || uploadingThumbnail || uploadingVideo}
                 className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}

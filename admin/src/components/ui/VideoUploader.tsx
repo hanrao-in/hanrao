@@ -8,9 +8,23 @@ import { supabase } from "@/integrations/supabase/client";
 interface Props {
   value?: string;
   onChange: (url: string) => void;
+  onUploadingStateChange?: (uploading: boolean) => void;
 }
 
-export function VideoUploader({ value = "", onChange }: Props) {
+function parseStorageUrl(url: string): { bucket: string; filePath: string } | null {
+  if (!url || !url.includes("/storage/v1/object/public/")) return null;
+  try {
+    const parts = url.split("/storage/v1/object/public/")[1]?.split("/");
+    if (!parts || parts.length < 2) return null;
+    const bucket = parts[0];
+    const filePath = parts.slice(1).join("/");
+    return { bucket, filePath };
+  } catch {
+    return null;
+  }
+}
+
+export function VideoUploader({ value = "", onChange, onUploadingStateChange }: Props) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [inputUrl, setInputUrl] = useState("");
@@ -24,32 +38,75 @@ export function VideoUploader({ value = "", onChange }: Props) {
     }
 
     setLoading(true);
-    setProgress(10);
+    setProgress(0);
+    if (onUploadingStateChange) onUploadingStateChange(true);
+
     try {
       const ext = file.name.split(".").pop() || "mp4";
       const filePath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
 
-      // Perform direct chunked binary upload to Supabase storage
-      setProgress(30);
+      // Upload with chunked progress tracking
       const { data, error } = await supabase.storage.from("videos").upload(filePath, file, {
         contentType: file.type,
         upsert: true,
-      });
+        onUploadProgress: (progressEvent: any) => {
+          const pct = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          setProgress(pct);
+        },
+      } as any);
 
-      if (error) throw error;
-      setProgress(80);
+      if (error) {
+        let msg = "Upload failed. Please try again.";
+        const errorStr = (error.message || "").toLowerCase();
+        if (errorStr.includes("bucket not found")) {
+          msg = "Video storage bucket not found. Please contact administrator.";
+        } else if (errorStr.includes("permission denied") || errorStr.includes("unauthorized")) {
+          msg = "Access denied: You do not have permissions to upload videos.";
+        } else if (errorStr.includes("payload too large") || errorStr.includes("413")) {
+          msg = "Video exceeds size limit (Max: 50MB).";
+        } else if (errorStr.includes("timeout")) {
+          msg = "Connection timed out. Please check your network.";
+        } else if (errorStr.includes("cancelled")) {
+          msg = "Upload cancelled.";
+        }
+        throw new Error(msg);
+      }
 
-      const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filePath);
       setProgress(100);
+      const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filePath);
+
+      // If there was a previous video, delete it
+      if (value) {
+        const parsed = parseStorageUrl(value);
+        if (parsed && parsed.bucket === "videos") {
+          await supabase.storage.from("videos").remove([parsed.filePath]);
+        }
+      }
 
       onChange(publicUrl);
       toast.success(`Video "${file.name}" uploaded successfully.`);
     } catch (err: any) {
-      toast.error(`Video upload failed: ${err.message || "Unknown error"}`);
+      toast.error(err.message || "Video upload failed. Please try again.");
     } finally {
       setLoading(false);
       setProgress(0);
+      if (onUploadingStateChange) onUploadingStateChange(false);
     }
+  };
+
+  const handleRemove = async () => {
+    if (value) {
+      const parsed = parseStorageUrl(value);
+      if (parsed && parsed.bucket === "videos") {
+        try {
+          await supabase.storage.from("videos").remove([parsed.filePath]);
+          toast.success("Previous video file removed from storage.");
+        } catch (e) {
+          console.warn("Failed to delete video file from storage", e);
+        }
+      }
+    }
+    onChange("");
   };
 
   const applyUrl = () => {
@@ -70,7 +127,7 @@ export function VideoUploader({ value = "", onChange }: Props) {
         {value && (
           <button
             type="button"
-            onClick={() => onChange("")}
+            onClick={handleRemove}
             className="text-xs font-medium text-destructive hover:underline flex items-center gap-1"
           >
             <X className="h-3.5 w-3.5" /> Remove Video
@@ -103,7 +160,7 @@ export function VideoUploader({ value = "", onChange }: Props) {
             <p className="text-[11px] text-muted-foreground truncate font-mono max-w-[70%]">{value}</p>
             <button
               type="button"
-              onClick={() => onChange("")}
+              onClick={handleRemove}
               className="text-xs font-medium text-primary hover:underline"
             >
               Replace Video
@@ -139,6 +196,7 @@ export function VideoUploader({ value = "", onChange }: Props) {
                 type="file"
                 accept="video/mp4,video/quicktime,video/webm"
                 className="hidden"
+                disabled={loading}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) handleFile(f);
