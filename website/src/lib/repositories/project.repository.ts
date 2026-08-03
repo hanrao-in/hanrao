@@ -37,30 +37,33 @@ export class ProjectRepository extends BaseRepository<Project> {
   }
 
   async listFeatured(limit: number = 6): Promise<Project[]> {
-    let { data, error } = await this.dbClient
+    const { data, error } = await this.dbClient
       .from("projects")
-      .select("*")
-      .eq("featured", true)
-      .eq("status", "active")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+      .select("*");
 
     if (error) this.handleError(error);
 
-    if (!data || data.length === 0) {
-      // Fallback: list all active projects so home is never blank
-      const res = await this.dbClient
-        .from("projects")
-        .select("*")
-        .eq("status", "active")
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(limit);
-      if (res.error) this.handleError(res.error);
-      data = res.data;
+    const projects = (data || []) as Project[];
+
+    // 1. Try to find active featured projects (not deleted)
+    const featured = projects.filter(
+      (p) => p.featured === true && p.status === "active" && !p.deleted_at,
+    );
+    if (featured.length > 0) {
+      featured.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return featured.slice(0, limit);
     }
 
-    return (data || []) as Project[];
+    // 2. Fallback to active projects (not deleted)
+    const active = projects.filter((p) => p.status === "active" && !p.deleted_at);
+    if (active.length > 0) {
+      active.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return active.slice(0, limit);
+    }
+
+    // 3. Fallback to any project (not deleted)
+    const nonDeleted = projects.filter((p) => !p.deleted_at);
+    nonDeleted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return nonDeleted.slice(0, limit);
   }
 }
