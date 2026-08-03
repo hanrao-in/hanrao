@@ -31,6 +31,24 @@ export function VideoUploader({ value = "", onChange, onUploadingStateChange }: 
   const [tab, setTab] = useState<"file" | "url">("file");
 
   const handleFile = async (file: File) => {
+    // 1. Verify Authentication Session
+    let sessionResult;
+    try {
+      sessionResult = await supabase.auth.getSession();
+    } catch (e) {
+      toast.error("Authentication check failed. Please sign in again.");
+      window.location.href = "/login";
+      return;
+    }
+
+    const session = sessionResult.data?.session;
+    if (!session || !session.access_token || !session.user?.id) {
+      toast.error("Session expired. Please sign in again.");
+      if (onUploadingStateChange) onUploadingStateChange(false);
+      window.location.href = "/login";
+      return;
+    }
+
     const val = validateVideoFile(file, 50);
     if (!val.valid) {
       toast.error(val.error);
@@ -41,10 +59,19 @@ export function VideoUploader({ value = "", onChange, onUploadingStateChange }: 
     setProgress(0);
     if (onUploadingStateChange) onUploadingStateChange(true);
 
-    try {
-      const ext = file.name.split(".").pop() || "mp4";
-      const filePath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+    const ext = file.name.split(".").pop() || "mp4";
+    const filePath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
 
+    // Immediately before upload, log details
+    console.log("[STORAGE UPLOAD START]", {
+      userId: session.user.id,
+      bucket: "videos",
+      path: filePath,
+      contentType: file.type,
+      sessionStatus: "active"
+    });
+
+    try {
       // Upload with chunked progress tracking
       const { data, error } = await supabase.storage.from("videos").upload(filePath, file, {
         contentType: file.type,
@@ -56,12 +83,23 @@ export function VideoUploader({ value = "", onChange, onUploadingStateChange }: 
       } as any);
 
       if (error) {
+        // Detailed error logging in development console
+        console.error("[STORAGE UPLOAD ERROR DETAILS]", {
+          message: error.message,
+          statusCode: (error as any).statusCode || (error as any).status || "unknown",
+          name: error.name || "StorageError",
+          bucket: "videos",
+          path: filePath,
+          userId: session.user.id,
+          sessionStatus: "active"
+        });
+
         let msg = "Upload failed. Please try again.";
         const errorStr = (error.message || "").toLowerCase();
         if (errorStr.includes("bucket not found")) {
           msg = "Video storage bucket not found. Please contact administrator.";
-        } else if (errorStr.includes("permission denied") || errorStr.includes("unauthorized")) {
-          msg = "Access denied: You do not have permissions to upload videos.";
+        } else if (errorStr.includes("permission denied") || errorStr.includes("unauthorized") || errorStr.includes("violates row-level security")) {
+          msg = "Access denied: You do not have permissions to upload videos. Please contact administrator to check bucket RLS.";
         } else if (errorStr.includes("payload too large") || errorStr.includes("413")) {
           msg = "Video exceeds size limit (Max: 50MB).";
         } else if (errorStr.includes("timeout")) {
@@ -74,6 +112,14 @@ export function VideoUploader({ value = "", onChange, onUploadingStateChange }: 
 
       setProgress(100);
       const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filePath);
+
+      // Verify storage access by checking the public URL
+      try {
+        const testRes = await fetch(publicUrl, { method: "HEAD" });
+        console.log(`[STORAGE VERIFY ACCESS] GET Public URL check: Status ${testRes.status}`);
+      } catch (checkErr) {
+        console.warn("[STORAGE VERIFY ACCESS WARNING] Failed to HEAD public url", checkErr);
+      }
 
       // If there was a previous video, delete it
       if (value) {
