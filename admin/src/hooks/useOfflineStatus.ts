@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 
 export function useOfflineStatus() {
-  const [isOffline, setIsOffline] = useState(typeof navigator !== "undefined" ? !navigator.onLine : false);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
+    // Safely sync initial online state after client hydration
+    if (typeof navigator !== "undefined") {
+      setIsOffline(!navigator.onLine);
+    }
+
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 
