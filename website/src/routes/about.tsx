@@ -9,12 +9,12 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "HanRao Realty has curated premium open plots across Hyderabad for over a decade. Learn about our story, values and team.",
+          "HanRao Realty has curated premium open plots across Nellore for over a decade. Learn about our story, values and team.",
       },
       { property: "og:title", content: "About HanRao Realty" },
       {
         property: "og:description",
-        content: "A decade of curated real estate across Hyderabad.",
+        content: "A decade of curated real estate across Nellore.",
       },
     ],
     links: [{ rel: "canonical", href: "/about" }],
@@ -39,7 +39,7 @@ function AboutPage() {
             Land, curated with <span className="italic text-accent">integrity</span>.
           </motion.h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            For over twelve years, HanRao Realty has helped families across Hyderabad find land they
+            For over twelve years, HanRao Realty has helped families across Nellore find land they
             can build a lifetime on — with clear titles, fair pricing, and honest advice.
           </p>
         </div>

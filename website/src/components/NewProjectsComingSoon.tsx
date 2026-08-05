@@ -10,7 +10,7 @@ interface Props {
 
 export function NewProjectsComingSoon({
   title = "New Projects Adding Soon...",
-  subtitle = "Our team is curating brand new HMDA & DTCP approved layouts across prime Hyderabad locations. Stay tuned!",
+  subtitle = "Our team is curating brand new HMDA & DTCP approved layouts across prime Nellore locations. Stay tuned!",
   showContactAction = true,
 }: Props) {
   return (

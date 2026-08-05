@@ -14,12 +14,12 @@ export const Route = createFileRoute("/contact")({
       {
         name: "description",
         content:
-          "Get in touch with HanRao Realty. Call, email or visit our office in Hyderabad's Financial District.",
+          "Get in touch with HanRao Realty. Call, email or visit our office in Kavali, Nellore District, Andhra Pradesh.",
       },
       { property: "og:title", content: "Contact HanRao Realty" },
       {
         property: "og:description",
-        content: "Call, email or visit our Hyderabad office.",
+        content: "Call, email or visit our Kavali office.",
       },
     ],
     links: [{ rel: "canonical", href: "/contact" }],
@@ -198,22 +198,33 @@ function ContactPage() {
                 <div className="truncate font-serif text-xl font-semibold">{SITE.email}</div>
               </div>
             </a>
-            <div
+            <a
+              href={SITE.office.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => trackEvent("map_click", { location: "contact_page" })}
-              className="flex items-start gap-4 rounded-2xl bg-card p-6 shadow-soft ring-1 ring-border cursor-pointer"
+              className="flex items-start gap-4 rounded-2xl bg-card p-6 shadow-soft ring-1 ring-border transition-shadow hover:shadow-luxe"
             >
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
                 <MapPin className="h-5 w-5" />
               </div>
               <div className="min-w-0">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Office</div>
-                <div className="font-serif text-lg font-semibold leading-tight">{SITE.address}</div>
+                <div className="font-serif text-base font-semibold leading-snug text-foreground">
+                  <div>{SITE.office.name}</div>
+                  <div className="text-sm font-normal text-muted-foreground mt-0.5">
+                    {SITE.office.address}<br />
+                    {SITE.office.locality}<br />
+                    {SITE.office.district}<br />
+                    {SITE.office.state} – {SITE.office.postalCode}
+                  </div>
+                </div>
               </div>
-            </div>
+            </a>
 
             <iframe
               title="HanRao Realty office"
-              src="https://www.google.com/maps?q=Financial+District+Hyderabad&hl=en&z=13&output=embed"
+              src={SITE.office.mapsEmbed}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               className="h-72 w-full rounded-2xl border border-border"

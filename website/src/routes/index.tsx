@@ -19,6 +19,7 @@ import { ProjectGridSkeleton } from "@/components/LoadingSkeleton";
 import { SmartSearchBar } from "@/components/SmartSearchBar";
 import { NewProjectsComingSoon } from "@/components/NewProjectsComingSoon";
 import { listFeaturedProjects } from "@/lib/supabase.functions";
+import { SITE } from "@/lib/site";
 import heroImg from "@/assets/hero.jpg";
 
 const featuredQuery = {
@@ -31,36 +32,36 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       // ── Primary SEO ──────────────────────────────────────────────────────────
-      { title: "HanRao Realty — Premium Open Plots in Hyderabad" },
+      { title: "HanRao Realty — Premium Open Plots in Nellore" },
       {
         name: "description",
         content:
-          "HanRao Realty offers premium HMDA, DTCP and RERA approved open plots, villa plots and farm land for sale across Hyderabad, Shamshabad, Sangareddy and Kompally.",
+          "HanRao Realty offers premium HMDA, DTCP and RERA approved open plots, villa plots and farm land for sale across Nellore, Kavali, and surrounding regions.",
       },
       {
         name: "keywords",
         content:
-          "HanRao Realty, open plots hyderabad, HMDA plots, DTCP plots, RERA approved plots, gated community plots, Shamshabad plots, Sangareddy plots, Kompally plots, real estate hyderabad",
+          "HanRao Realty, open plots nellore, HMDA plots, DTCP plots, RERA approved plots, gated community plots, Kavali plots, real estate nellore",
       },
       { name: "author", content: "HanRao Realty" },
       { name: "robots", content: "index, follow" },
       // ── Open Graph ───────────────────────────────────────────────────────────
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "HanRao Realty — Premium Open Plots in Hyderabad" },
+      { property: "og:title", content: "HanRao Realty — Premium Open Plots in Nellore" },
       {
         property: "og:description",
         content:
-          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Hyderabad.",
+          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore.",
       },
       { property: "og:url", content: "https://hanrao.in" },
       { property: "og:image", content: "https://hanrao.in/og-image.png" },
       // ── Twitter Card ─────────────────────────────────────────────────────────
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "HanRao Realty — Premium Open Plots in Hyderabad" },
+      { name: "twitter:title", content: "HanRao Realty — Premium Open Plots in Nellore" },
       {
         name: "twitter:description",
         content:
-          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Hyderabad.",
+          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore.",
       },
       { name: "twitter:image", content: "https://hanrao.in/og-image.png" },
     ],
@@ -85,12 +86,14 @@ export const Route = createFileRoute("/")({
           logo: "https://hanrao.in/favicon.png",
           image: "https://hanrao.in/og-image.png",
           description:
-            "Premium HMDA, DTCP & RERA approved open plots, villa plots, and farm lands for sale across Hyderabad.",
+            "Premium HMDA, DTCP & RERA approved open plots, villa plots, and farm lands for sale across Nellore.",
           telephone: "+918341505195",
           address: {
             "@type": "PostalAddress",
-            addressLocality: "Hyderabad",
-            addressRegion: "Telangana",
+            streetAddress: SITE.office.address,
+            addressLocality: SITE.office.locality,
+            addressRegion: SITE.office.state,
+            postalCode: SITE.office.postalCode,
             addressCountry: "IN",
           },
         }),
@@ -137,7 +140,7 @@ function Hero() {
           className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 bg-background/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-primary-foreground backdrop-blur-sm"
         >
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          Premium Real Estate · Hyderabad
+          Premium Real Estate · Nellore
         </motion.div>
 
         <motion.h1
@@ -156,7 +159,7 @@ function Hero() {
           className="mt-5 max-w-2xl text-balance text-lg text-primary-foreground/90"
         >
           Curated HMDA, DTCP and RERA approved open plots, villa plots and farm land across
-          Hyderabad's most sought-after locations.
+          Nellore's most sought-after locations.
         </motion.p>
 
         {/* Smart search bar */}
@@ -374,7 +377,7 @@ function WhyUs() {
     <section className="container-luxe py-20 md:py-24" aria-label="Why HanRao Realty">
       <SectionHeading
         eyebrow="Why HanRao Realty"
-        title="Trusted by families across Hyderabad"
+        title="Trusted by families across Nellore"
         subtitle="Twelve years of curated real estate, delivered with integrity."
       />
       <div className="mt-12 grid gap-5 md:grid-cols-2">
@@ -480,7 +483,7 @@ function FAQ() {
     },
     {
       q: "Which locations do you cover?",
-      a: "Hyderabad, Shamshabad, Sangareddy, Kompally, Shankarpally, Adibatla, Patancheru, Yadagirigutta and more.",
+      a: "Nellore, Kavali, Gudur, Naidupeta, and surrounding regions.",
     },
   ];
   const [open, setOpen] = useState<number | null>(0);
@@ -537,7 +540,7 @@ function CTA() {
             Ready to see your plot in person?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-primary-foreground/85">
-            Book a complimentary site visit — we'll arrange transport from Hyderabad.
+            Book a complimentary site visit — we'll arrange transport from Nellore.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link

@@ -15,6 +15,7 @@ import { reportError } from "../lib/error-reporting";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FloatingActions } from "@/components/FloatingActions";
+import { SITE } from "@/lib/site";
 
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { trackEvent, trackException } from "@/lib/analytics";
@@ -92,36 +93,36 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       // ── Primary SEO ──────────────────────────────────────────────────────────
-      { title: "HanRao Realty — Premium Open Plots in Hyderabad" },
+      { title: "HanRao Realty — Premium Open Plots in Nellore" },
       {
         name: "description",
         content:
-          "HanRao Realty offers premium HMDA, DTCP and RERA approved open plots, villa plots and farm land for sale across Hyderabad, Shamshabad, Sangareddy and Kompally.",
+          "HanRao Realty offers premium HMDA, DTCP and RERA approved open plots, villa plots and farm land for sale across Nellore, Kavali, and surrounding regions.",
       },
       {
         name: "keywords",
         content:
-          "HanRao Realty, open plots hyderabad, HMDA plots, DTCP plots, RERA approved plots, gated community plots, Shamshabad plots, Sangareddy plots, Kompally plots, real estate hyderabad",
+          "HanRao Realty, open plots nellore, HMDA plots, DTCP plots, RERA approved plots, gated community plots, Kavali plots, real estate nellore",
       },
       { name: "author", content: "HanRao Realty" },
       { name: "robots", content: "index, follow" },
       // ── Open Graph ───────────────────────────────────────────────────────────
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "HanRao Realty — Premium Open Plots in Hyderabad" },
+      { property: "og:title", content: "HanRao Realty — Premium Open Plots in Nellore" },
       {
         property: "og:description",
         content:
-          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Hyderabad.",
+          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore.",
       },
       { property: "og:url", content: "https://hanrao.in" },
       { property: "og:image", content: "https://hanrao.in/og-image.png" },
       // ── Twitter Card ─────────────────────────────────────────────────────────
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "HanRao Realty — Premium Open Plots in Hyderabad" },
+      { name: "twitter:title", content: "HanRao Realty — Premium Open Plots in Nellore" },
       {
         name: "twitter:description",
         content:
-          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Hyderabad.",
+          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore.",
       },
       { name: "twitter:image", content: "https://hanrao.in/og-image.png" },
     ],
@@ -147,12 +148,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           logo: "https://hanrao.in/favicon.png",
           image: "https://hanrao.in/og-image.png",
           description:
-            "Premium HMDA, DTCP & RERA approved open plots, villa plots, and farm lands for sale across Hyderabad.",
+            "Premium HMDA, DTCP & RERA approved open plots, villa plots, and farm lands for sale across Nellore.",
           telephone: "+918341505195",
           address: {
             "@type": "PostalAddress",
-            addressLocality: "Hyderabad",
-            addressRegion: "Telangana",
+            streetAddress: SITE.office.address,
+            addressLocality: SITE.office.locality,
+            addressRegion: SITE.office.state,
+            postalCode: SITE.office.postalCode,
             addressCountry: "IN",
           },
         }),

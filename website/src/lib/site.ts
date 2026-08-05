@@ -6,7 +6,21 @@ export const SITE = {
   phoneE164: "+918341505195",
   whatsapp: "918341505195",
   email: "hanraoadmin@gmail.com",
-  address: "Financial District, Hyderabad, Telangana 500032",
+  office: {
+    name: "HanRao Office",
+    address: "Near SRO Office",
+    locality: "Kavali",
+    district: "Nellore District",
+    state: "Andhra Pradesh",
+    postalCode: "524201",
+    country: "India",
+    fullAddress: "Near SRO Office, Kavali, Nellore District, Andhra Pradesh – 524201",
+    mapsUrl:
+      "https://www.google.com/maps/search/?api=1&query=Near+SRO+Office+Kavali+Nellore+Andhra+Pradesh+524201",
+    mapsEmbed:
+      "https://www.google.com/maps?q=Near+SRO+Office+Kavali+Nellore+Andhra+Pradesh+524201&hl=en&z=15&output=embed",
+  },
+  address: "Near SRO Office, Kavali, Nellore District, Andhra Pradesh – 524201",
   navLinks: [
     { to: "/", label: "Home" },
     { to: "/projects", label: "Projects" },

@@ -45,10 +45,10 @@ export const Route = createFileRoute("/search")({
       {
         name: "description",
         content:
-          "Search premium HMDA, DTCP and RERA approved plots across Hyderabad. Filter by location, price, area, plot type and approval.",
+          "Search premium HMDA, DTCP and RERA approved plots across Nellore. Filter by location, price, area, plot type and approval.",
       },
       { property: "og:title", content: "Search Plots — HanRao Realty" },
-      { property: "og:description", content: "Find your perfect plot in Hyderabad." },
+      { property: "og:description", content: "Find your perfect plot in Nellore." },
     ],
     links: [{ rel: "canonical", href: "/search" }],
   }),

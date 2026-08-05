@@ -41,12 +41,15 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
 
   // 2. Track Route Changes (pathname + search + hash)
   useEffect(() => {
-    const fullRoute = `${location.pathname}${location.search}${location.hash}`;
-    trackPageView(fullRoute, document.title);
+    const fullRoute =
+      typeof window !== "undefined"
+        ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+        : location.pathname;
+    trackPageView(fullRoute, typeof document !== "undefined" ? document.title : "");
 
     // Reset scroll depth tracking on route change
     trackedScrollDepths.current.clear();
-  }, [location.pathname, location.search, location.hash]);
+  }, [location.pathname, location.href]);
 
   // 3. Scroll Depth Tracking (25%, 50%, 75%, 100%)
   useEffect(() => {

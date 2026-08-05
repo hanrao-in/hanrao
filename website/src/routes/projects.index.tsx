@@ -20,12 +20,12 @@ export const Route = createFileRoute("/projects/")({
       {
         name: "description",
         content:
-          "Browse all HanRao Realty projects across Hyderabad — HMDA, DTCP and RERA approved open plots, villa plots and farm land.",
+          "Browse all HanRao Realty projects across Nellore — HMDA, DTCP and RERA approved open plots, villa plots and farm land.",
       },
       { property: "og:title", content: "All Projects — HanRao Realty" },
       {
         property: "og:description",
-        content: "Explore every HanRao Realty community across Hyderabad.",
+        content: "Explore every HanRao Realty community across Nellore.",
       },
       { name: "robots", content: "index, follow" },
     ],
@@ -211,7 +211,7 @@ function ProjectsGrid() {
             title={data.length === 0 ? "New Projects Adding Soon..." : "No Matching Projects..."}
             subtitle={
               data.length === 0
-                ? "Our team is curating brand new HMDA & DTCP approved layouts across prime Hyderabad locations. Stay tuned!"
+                ? "Our team is curating brand new HMDA & DTCP approved layouts across prime Nellore locations. Stay tuned!"
                 : "Try a different keyword or clear your active filters."
             }
           />

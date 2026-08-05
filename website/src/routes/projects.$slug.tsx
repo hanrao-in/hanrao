@@ -355,7 +355,7 @@ function ProjectDetailPage() {
           <div id="book" className="rounded-2xl bg-card p-6 shadow-luxe ring-1 ring-border">
             <h2 className="font-serif text-2xl font-semibold">Book a Site Visit</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Complimentary transport from Hyderabad.
+              Complimentary transport from Nellore.
             </p>
             <SiteVisitForm projectId={p.id} projectName={p.name} />
           </div>
@@ -706,7 +706,7 @@ function MapPlaceholder({ name, location }: { name: string; location: string }) 
         </p>
         {location && (
           <a
-            href={`https://www.google.com/maps/search/${encodeURIComponent(name + " " + location + " Hyderabad")}`}
+            href={`https://www.google.com/maps/search/${encodeURIComponent(name + " " + location + " Nellore")}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-1 inline-flex items-center gap-2 rounded-full border border-border bg-background/90 px-4 py-2 text-sm font-medium hover:border-primary/50 hover:text-primary transition-colors"

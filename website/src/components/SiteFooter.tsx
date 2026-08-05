@@ -10,7 +10,7 @@ export function SiteFooter() {
         <div className="md:col-span-2">
           <div className="font-serif text-3xl font-semibold">HanRao Realty</div>
           <p className="mt-3 max-w-md text-sm text-primary-foreground/80">
-            Curating premium open plots, villa plots and farm land across Hyderabad. Trusted by
+            Curating premium open plots, villa plots and farm land across Nellore. Trusted by
             hundreds of families building their dream address.
           </p>
         </div>
@@ -50,13 +50,16 @@ export function SiteFooter() {
               <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
             </li>
             <li className="flex gap-2">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span
-                className="cursor-pointer hover:underline"
+              <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+              <a
+                href={SITE.office.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
                 onClick={() => trackEvent("map_click", { location: "footer" })}
               >
-                {SITE.address}
-              </span>
+                {SITE.office.address}, {SITE.office.locality}, {SITE.office.district}, {SITE.office.state} – {SITE.office.postalCode}
+              </a>
             </li>
           </ul>
         </div>
@@ -64,7 +67,7 @@ export function SiteFooter() {
       <div className="border-t border-primary-foreground/10">
         <div className="container-luxe flex flex-wrap items-center justify-between gap-2 py-5 text-xs text-primary-foreground/60">
           <span>© {new Date().getFullYear()} HanRao Realty. All rights reserved.</span>
-          <span>Premium Open Plots · Hyderabad · Telangana</span>
+          <span>Premium Open Plots · Kavali · Andhra Pradesh</span>
         </div>
       </div>
     </footer>
