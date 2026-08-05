@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
@@ -20,6 +20,7 @@ import { getProjectBySlug, submitEnquiry, submitSiteVisit } from "@/lib/supabase
 import { SITE, formatINR, formatPricePerSqYd } from "@/lib/site";
 import type { Plot, ProjectWithPlots } from "@/lib/types";
 import { UnifiedMediaGallery } from "@/components/UnifiedMediaGallery";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/projects/$slug")({
   loader: async ({ context, params }) => {
@@ -94,6 +95,17 @@ function ProjectDetailPage() {
     queryFn: () => getProjectBySlug({ data: { slug: project.slug } }),
   });
   const p = (data ?? project) as ProjectWithPlots;
+
+  useEffect(() => {
+    if (p?.name) {
+      trackEvent("project_view", {
+        project_name: p.name,
+        project_id: p.id,
+        project_location: [p.village, p.city, p.district].filter(Boolean).join(", "),
+        project_type: (p.approval_types || []).join(", "),
+      });
+    }
+  }, [p?.id, p?.name]);
 
   const [activePlotImages, setActivePlotImages] = useState<string[] | null>(null);
   const [activePlotIndex, setActivePlotIndex] = useState(0);
@@ -176,6 +188,7 @@ function ProjectDetailPage() {
                 href={p.brochure_url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackEvent("brochure_download", { project_name: p.name })}
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/50 transition-colors"
               >
                 <Download className="h-4 w-4" /> Brochure
@@ -187,6 +200,7 @@ function ProjectDetailPage() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent("whatsapp_click", { location: "project_detail", project_name: p.name })}
               aria-label={`WhatsApp enquiry for ${p.name}`}
               className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:bg-[#20bb5a] hover:shadow-md transition-all"
             >
@@ -197,6 +211,7 @@ function ProjectDetailPage() {
             </a>
             <a
               href={`tel:${SITE.phoneE164}`}
+              onClick={() => trackEvent("phone_click", { location: "project_detail", project_name: p.name })}
               aria-label={`Call HanRao Realty about ${p.name}`}
               className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >

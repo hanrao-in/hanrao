@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone } from "lucide-react";
 import { SITE } from "@/lib/site";
+import { trackEvent } from "@/lib/analytics";
+
 
 export function FloatingActions() {
   const [isVisible, setIsVisible] = useState(false);
@@ -46,6 +48,7 @@ export function FloatingActions() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent("whatsapp_click", { location: "floating_action" })}
               aria-label="Chat with HanRao Realty on WhatsApp"
               className="relative grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-luxe transition-all duration-200 hover:scale-105 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40"
             >
@@ -67,6 +70,7 @@ export function FloatingActions() {
             </span>
             <a
               href={`tel:${SITE.phoneE164}`}
+              onClick={() => trackEvent("phone_click", { location: "floating_action" })}
               aria-label={`Call HanRao Realty at ${SITE.phone}`}
               className="grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-luxe transition-all duration-200 hover:scale-105 hover:bg-primary/90 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
             >

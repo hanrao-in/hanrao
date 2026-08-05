@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { submitEnquiry, listProjects } from "@/lib/supabase.functions";
 import { SITE } from "@/lib/site";
 import type { Project } from "@/lib/types";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -90,6 +91,11 @@ function ContactPage() {
                       source: "website",
                     },
                   });
+                  trackEvent("contact_submit", {
+                    form_type: "contact_page",
+                    project_name: projectName,
+                    project_id: projId || undefined,
+                  });
                   toast.success("Thanks — we'll be in touch shortly.");
                   form.reset();
                 } catch (err) {
@@ -169,6 +175,7 @@ function ContactPage() {
           <div className="space-y-4">
             <a
               href={`tel:${SITE.phoneE164}`}
+              onClick={() => trackEvent("phone_click", { location: "contact_page" })}
               className="flex items-center gap-4 rounded-2xl bg-card p-6 shadow-soft ring-1 ring-border transition-shadow hover:shadow-luxe"
             >
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
@@ -191,7 +198,10 @@ function ContactPage() {
                 <div className="truncate font-serif text-xl font-semibold">{SITE.email}</div>
               </div>
             </a>
-            <div className="flex items-start gap-4 rounded-2xl bg-card p-6 shadow-soft ring-1 ring-border">
+            <div
+              onClick={() => trackEvent("map_click", { location: "contact_page" })}
+              className="flex items-start gap-4 rounded-2xl bg-card p-6 shadow-soft ring-1 ring-border cursor-pointer"
+            >
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
                 <MapPin className="h-5 w-5" />
               </div>

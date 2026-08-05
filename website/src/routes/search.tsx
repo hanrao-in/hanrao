@@ -10,6 +10,7 @@ import { SmartSearchBar } from "@/components/SmartSearchBar";
 import { NewProjectsComingSoon } from "@/components/NewProjectsComingSoon";
 import { searchProjects } from "@/lib/supabase.functions";
 import { APPROVAL_TYPES, PLOT_TYPES } from "@/lib/site";
+import { trackEvent } from "@/lib/analytics";
 
 // ---------------------------------------------------------------------------
 // Route definition
@@ -62,8 +63,17 @@ function SearchPage() {
   const navigate = Route.useNavigate();
   const [showFilters, setShowFilters] = useState(false);
 
-  const setSearch = (updates: Partial<SearchParams>) =>
+  const setSearch = (updates: Partial<SearchParams>) => {
     navigate({ search: (prev: SearchParams) => ({ ...prev, ...updates }) });
+    if (updates.q?.trim()) {
+      trackEvent("search", { search_term: updates.q.trim() });
+    }
+    const filterKeys = Object.keys(updates).filter((k) => k !== "q" && k !== "sort");
+    if (filterKeys.length > 0) {
+      const key = filterKeys[0];
+      trackEvent("filter_applied", { filter_type: key, filter_value: String(updates[key as keyof SearchParams]) });
+    }
+  };
 
   const activeFilters = useMemo(() => {
     const arr: { key: keyof SearchParams; label: string }[] = [];

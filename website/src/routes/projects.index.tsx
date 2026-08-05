@@ -8,6 +8,7 @@ import { SmartSearchBar } from "@/components/SmartSearchBar";
 import { NewProjectsComingSoon } from "@/components/NewProjectsComingSoon";
 import { listProjects } from "@/lib/supabase.functions";
 import { APPROVAL_TYPES } from "@/lib/site";
+import { trackEvent } from "@/lib/analytics";
 
 const projectsQuery = { queryKey: ["projects", "all"], queryFn: () => listProjects() };
 
@@ -120,6 +121,9 @@ function ProjectsGrid() {
           onSearch={(val) => {
             setQ(val);
             setPage(1);
+            if (val.trim()) {
+              trackEvent("search", { search_term: val.trim() });
+            }
           }}
         />
       </div>
@@ -131,8 +135,12 @@ function ProjectsGrid() {
             key={a}
             type="button"
             onClick={() => {
-              setActiveApproval(activeApproval === a ? null : a);
+              const next = activeApproval === a ? null : a;
+              setActiveApproval(next);
               setPage(1);
+              if (next) {
+                trackEvent("filter_applied", { filter_type: "approval_type", filter_value: next });
+              }
             }}
             className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
               activeApproval === a
@@ -153,8 +161,12 @@ function ProjectsGrid() {
             key={s.value}
             type="button"
             onClick={() => {
-              setActiveStatus(activeStatus === s.value ? null : s.value);
+              const next = activeStatus === s.value ? null : s.value;
+              setActiveStatus(next);
               setPage(1);
+              if (next) {
+                trackEvent("filter_applied", { filter_type: "status", filter_value: next });
+              }
             }}
             className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
               activeStatus === s.value

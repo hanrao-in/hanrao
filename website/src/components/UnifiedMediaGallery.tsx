@@ -17,6 +17,7 @@ import {
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   projectName: string;
@@ -42,6 +43,23 @@ export function UnifiedMediaGallery({
 
   // Combine videos
   const allVideos = [videoUrl, ...videoUrls].filter(Boolean) as string[];
+
+  const openVideoModal = (index: number) => {
+    setActiveVideoModal(index);
+    trackEvent(index === 0 ? "video_play" : "gallery_video_play", {
+      project_name: projectName,
+      video_index: index,
+      video_type: index === 0 ? "hero" : "gallery",
+    });
+  };
+
+  const openLightbox = (index: number) => {
+    setActiveLightbox(index);
+    trackEvent("gallery_image_view", {
+      project_name: projectName,
+      image_index: index,
+    });
+  };
 
   // Share functionality
   const shareMedia = async (url?: string) => {
@@ -92,7 +110,7 @@ export function UnifiedMediaGallery({
       {/* 1. HERO VIDEO BANNER */}
       {videoUrl && images[0] && (
         <div 
-          onClick={() => setActiveVideoModal(0)}
+          onClick={() => openVideoModal(0)}
           className="relative w-full h-[260px] sm:h-[380px] md:h-[460px] lg:h-[500px] rounded-[24px] overflow-hidden cursor-pointer group shadow-lg border border-border/40 bg-black/90 transition-all duration-300 hover:shadow-xl"
         >
           <img
@@ -177,7 +195,7 @@ export function UnifiedMediaGallery({
             <div
               key={idx}
               onClick={() => {
-                setActiveLightbox(idx);
+                openLightbox(idx);
                 setZoomLevel(1);
               }}
               className="relative aspect-square sm:aspect-[4/3] rounded-2xl md:rounded-[24px] overflow-hidden border border-border/40 bg-muted/30 cursor-pointer group shadow-sm hover:shadow-md transition-all duration-300"
@@ -209,7 +227,7 @@ export function UnifiedMediaGallery({
           {allVideos.map((video, idx) => (
             <div
               key={idx}
-              onClick={() => setActiveVideoModal(idx)}
+              onClick={() => openVideoModal(idx)}
               className="relative aspect-video rounded-[20px] md:rounded-[24px] overflow-hidden border border-border/40 bg-black/90 cursor-pointer group shadow-sm hover:shadow-md transition-all duration-300"
             >
               {images[0] ? (
@@ -270,12 +288,16 @@ export function UnifiedMediaGallery({
               target="_blank"
               rel="noopener noreferrer"
               download={`${projectName}-Brochure`}
+              onClick={() => trackEvent("brochure_download", { project_name: projectName })}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90 hover:shadow-sm transition-all"
             >
               <Download className="h-4 w-4" /> Download PDF
             </a>
             <button
-              onClick={() => setActiveBrochurePreview(true)}
+              onClick={() => {
+                setActiveBrochurePreview(true);
+                trackEvent("pdf_preview", { project_name: projectName });
+              }}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-xs font-semibold hover:bg-secondary transition-colors"
             >
               <Maximize2 className="h-4 w-4" /> Preview Brochure

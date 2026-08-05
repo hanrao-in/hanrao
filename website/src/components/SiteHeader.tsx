@@ -3,6 +3,7 @@ import { Menu, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { SITE } from "@/lib/site";
 import logo from "@/assets/hanrao-logo.png";
+import { trackEvent } from "@/lib/analytics";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -33,12 +34,14 @@ export function SiteHeader() {
               className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
               activeProps={{ className: "text-primary" }}
               activeOptions={{ exact: link.to === "/" }}
+              onClick={() => trackEvent("cta_click", { button_name: `Header Nav: ${link.label}` })}
             >
               {link.label}
             </Link>
           ))}
           <a
             href={`tel:${SITE.phoneE164}`}
+            onClick={() => trackEvent("phone_click", { location: "header" })}
             className="group inline-flex items-center justify-start rounded-full bg-primary p-2.5 text-sm font-medium text-primary-foreground shadow-soft transition-all duration-300 ease-in-out hover:px-5 max-w-[40px] hover:max-w-[220px] overflow-hidden whitespace-nowrap hover:bg-primary/90 hover:shadow-luxe"
           >
             <Phone className="h-5 w-5 shrink-0" />
@@ -68,13 +71,17 @@ export function SiteHeader() {
                 className="rounded-lg px-3 py-3 text-sm font-medium text-foreground/80 hover:bg-secondary hover:text-primary"
                 activeProps={{ className: "bg-secondary text-primary" }}
                 activeOptions={{ exact: link.to === "/" }}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  trackEvent("cta_click", { button_name: `Mobile Nav: ${link.label}` });
+                }}
               >
                 {link.label}
               </Link>
             ))}
             <a
               href={`tel:${SITE.phoneE164}`}
+              onClick={() => trackEvent("phone_click", { location: "mobile_menu" })}
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
             >
               <Phone className="h-4 w-4" /> Call {SITE.phone}

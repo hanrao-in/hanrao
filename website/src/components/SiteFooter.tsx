@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { SITE } from "@/lib/site";
+import { trackEvent } from "@/lib/analytics";
 
 export function SiteFooter() {
   return (
@@ -37,7 +38,12 @@ export function SiteFooter() {
           <ul className="space-y-3 text-sm text-primary-foreground/85">
             <li className="flex gap-2">
               <Phone className="h-4 w-4 shrink-0" />
-              <a href={`tel:${SITE.phoneE164}`}>{SITE.phone}</a>
+              <a
+                href={`tel:${SITE.phoneE164}`}
+                onClick={() => trackEvent("phone_click", { location: "footer" })}
+              >
+                {SITE.phone}
+              </a>
             </li>
             <li className="flex gap-2">
               <Mail className="h-4 w-4 shrink-0" />
@@ -45,7 +51,12 @@ export function SiteFooter() {
             </li>
             <li className="flex gap-2">
               <MapPin className="h-4 w-4 shrink-0" />
-              <span>{SITE.address}</span>
+              <span
+                className="cursor-pointer hover:underline"
+                onClick={() => trackEvent("map_click", { location: "footer" })}
+              >
+                {SITE.address}
+              </span>
             </li>
           </ul>
         </div>

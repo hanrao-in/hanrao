@@ -16,7 +16,14 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FloatingActions } from "@/components/FloatingActions";
 
+import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+import { trackEvent, trackException } from "@/lib/analytics";
+
 function NotFoundComponent() {
+  useEffect(() => {
+    trackEvent("404_page_view", { page_path: window.location.pathname });
+  }, []);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -42,6 +49,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
+    trackException(error, { fatal: false });
     reportError(
       error,
       { boundary: "tanstack_root_error_component" },
@@ -185,18 +193,20 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <div className="flex min-h-screen flex-col overflow-x-hidden">
-          <OfflineBanner />
-          <SiteHeader />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <SiteFooter />
-          <FloatingActions />
-          <Toaster position="top-center" richColors />
-        </div>
-      </ErrorBoundary>
+      <AnalyticsProvider>
+        <ErrorBoundary>
+          <div className="flex min-h-screen flex-col overflow-x-hidden">
+            <OfflineBanner />
+            <SiteHeader />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            <SiteFooter />
+            <FloatingActions />
+            <Toaster position="top-center" richColors />
+          </div>
+        </ErrorBoundary>
+      </AnalyticsProvider>
     </QueryClientProvider>
   );
 }
