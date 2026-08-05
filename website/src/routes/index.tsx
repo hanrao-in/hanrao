@@ -32,36 +32,36 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       // ── Primary SEO ──────────────────────────────────────────────────────────
-      { title: "HanRao Realty — Premium Open Plots in Nellore" },
+      { title: "HanRao Realty — Premium HMDA, DTCP & RERA Approved Open Plots | Nellore & Andhra Pradesh" },
       {
         name: "description",
         content:
-          "HanRao Realty offers premium HMDA, DTCP and RERA approved open plots, villa plots and farm land for sale across Nellore, Kavali, and surrounding regions.",
+          "HanRao Realty offers premium HMDA, DTCP and RERA approved open plots, villa plots and farm land for sale across Nellore, Kavali, and Andhra Pradesh.",
       },
       {
         name: "keywords",
         content:
-          "HanRao Realty, open plots nellore, HMDA plots, DTCP plots, RERA approved plots, gated community plots, Kavali plots, real estate nellore",
+          "HanRao Realty, open plots Nellore, Kavali plots, HMDA plots, DTCP plots, RERA approved plots, gated community plots, real estate Andhra Pradesh",
       },
       { name: "author", content: "HanRao Realty" },
       { name: "robots", content: "index, follow" },
       // ── Open Graph ───────────────────────────────────────────────────────────
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "HanRao Realty — Premium Open Plots in Nellore" },
+      { property: "og:title", content: "HanRao Realty — Premium HMDA, DTCP & RERA Approved Open Plots | Nellore & Andhra Pradesh" },
       {
         property: "og:description",
         content:
-          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore.",
+          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore, Kavali, and Andhra Pradesh.",
       },
       { property: "og:url", content: "https://hanrao.in" },
       { property: "og:image", content: "https://hanrao.in/og-image.png" },
       // ── Twitter Card ─────────────────────────────────────────────────────────
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "HanRao Realty — Premium Open Plots in Nellore" },
+      { name: "twitter:title", content: "HanRao Realty — Premium HMDA, DTCP & RERA Approved Open Plots | Nellore & Andhra Pradesh" },
       {
         name: "twitter:description",
         content:
-          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore.",
+          "Explore premium HMDA, DTCP and RERA approved gated community open plots across Nellore, Kavali, and Andhra Pradesh.",
       },
       { name: "twitter:image", content: "https://hanrao.in/og-image.png" },
     ],

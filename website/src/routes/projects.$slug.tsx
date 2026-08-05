@@ -72,7 +72,7 @@ export const Route = createFileRoute("/projects/$slug")({
             address: {
               "@type": "PostalAddress",
               addressLocality: p.city || p.district,
-              addressRegion: p.state || "Telangana",
+              addressRegion: p.state || "Andhra Pradesh",
               addressCountry: "IN",
             },
             offeredBy: {
