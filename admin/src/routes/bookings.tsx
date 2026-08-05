@@ -129,18 +129,16 @@ function Bookings() {
     setSaving(true);
     try {
       if (modal === "create") {
-        await adminDb.bookings.create(form);
+        const created = await adminDb.bookings.create(form);
+        setItems((prev) => [created, ...prev]);
         toast.success("Booking created");
       } else if (modal) {
-        await adminDb.bookings.update((modal as Booking).id, form);
+        const targetId = (modal as Booking).id;
+        const updated = await adminDb.bookings.update(targetId, form);
+        setItems((prev) => prev.map((x) => (x.id === targetId ? { ...x, ...form, ...updated } : x)));
         toast.success("Booking updated");
       }
-      await fetchItems();
       closeModal();
-      if (selected) {
-        const updated = items.find((x) => x.id === (modal as Booking).id);
-        if (updated) setSelected(updated);
-      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -151,11 +149,12 @@ function Bookings() {
   const remove = async (b: Booking) => {
     if (!confirm(`Delete booking for ${b.customer_name}?`)) return;
     try {
+      setItems((prev) => prev.filter((x) => x.id !== b.id));
       await adminDb.bookings.delete(b.id);
-      await fetchItems();
       setSelected(null);
       toast.success("Deleted");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };

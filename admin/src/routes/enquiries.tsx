@@ -106,11 +106,12 @@ function Enquiries() {
 
   const updateStatus = async (e: Enquiry, status: string) => {
     try {
+      setItems((prev) => prev.map((x) => (x.id === e.id ? { ...x, lead_status: status as any } : x)));
       await adminDb.enquiries.update(e.id, { lead_status: status as any });
-      await fetchItems();
       if (selected?.id === e.id) setSelected((prev) => prev ? { ...prev, lead_status: status as any } : null);
       toast.success("Status updated");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };
@@ -122,23 +123,25 @@ function Enquiries() {
         project_id: projectId || null,
         project_name: selectedProj ? selectedProj.name : "",
       };
+      setItems((prev) => prev.map((x) => (x.id === e.id ? { ...x, ...updates } as any : x)));
       await adminDb.enquiries.update(e.id, updates as any);
-      await fetchItems();
       if (selected?.id === e.id) {
         setSelected((prev) => prev ? { ...prev, ...updates } as any : null);
       }
       toast.success("Project linkage updated");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };
 
   const updateNotes = async (e: Enquiry, notes: string) => {
     try {
+      setItems((prev) => prev.map((x) => (x.id === e.id ? { ...x, notes } : x)));
       await adminDb.enquiries.update(e.id, { notes });
-      await fetchItems();
       toast.success("Notes saved");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };
@@ -161,7 +164,7 @@ function Enquiries() {
     const projectName = selectedProj ? selectedProj.name : undefined;
 
     try {
-      await adminDb.enquiries.create({
+      const created = await adminDb.enquiries.create({
         name,
         phone,
         email,
@@ -174,9 +177,9 @@ function Enquiries() {
         notes: "",
       } as any);
 
+      setItems((prev) => [created, ...prev]);
       toast.success("Enquiry created successfully");
       setIsAddOpen(false);
-      fetchItems();
     } catch (err: any) {
       toast.error(err.message || "Failed to create enquiry");
     } finally {
@@ -187,11 +190,12 @@ function Enquiries() {
   const remove = async (e: Enquiry) => {
     if (!confirm(`Delete enquiry from ${e.name}?`)) return;
     try {
+      setItems((prev) => prev.filter((x) => x.id !== e.id));
       await adminDb.enquiries.delete(e.id);
-      await fetchItems();
       if (selected?.id === e.id) setSelected(null);
       toast.success("Deleted");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };

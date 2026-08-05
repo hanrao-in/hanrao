@@ -2,6 +2,14 @@ import { getRequest } from "@tanstack/react-start/server";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+interface CachedAuth {
+  email: string;
+  userId: string;
+  expiresAt: number;
+}
+
+const authCache = new Map<string, CachedAuth>();
+
 export class AuthService {
   constructor(
     private readonly client = supabase,
@@ -92,7 +100,7 @@ export class AuthService {
   }
 
   /**
-   * Admin verification - checks session and role
+   * Admin verification - checks session and role with memory caching fallback
    */
   async verifyAdminAuth(): Promise<{ email: string; userId: string }> {
     this.validateCSRF();
@@ -120,12 +128,19 @@ export class AuthService {
       throw new Error("Unauthorized: Missing auth token");
     }
 
+    // Check memory cache first
+    const cached = authCache.get(token);
+    if (cached && Date.now() < cached.expiresAt) {
+      return { email: cached.email, userId: cached.userId };
+    }
+
     // Authenticate token with Supabase Auth
     const {
       data: { user },
       error,
     } = await this.adminClient.auth.getUser(token);
     if (error || !user) {
+      authCache.delete(token);
       throw new Error("Unauthorized: Invalid or expired session");
     }
 
@@ -155,6 +170,22 @@ export class AuthService {
       throw new Error("Forbidden: Admin privileges required");
     }
 
-    return { email: user.email || "", userId: user.id };
+    // Parse JWT exp timestamp if available
+    let expiresAt = Date.now() + 5 * 60 * 1000;
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
+        if (payload && typeof payload.exp === "number") {
+          expiresAt = payload.exp * 1000;
+        }
+      }
+    } catch {
+      // Use fallback 5 min expiration
+    }
+
+    const verified = { email: user.email || "", userId: user.id };
+    authCache.set(token, { ...verified, expiresAt });
+    return verified;
   }
 }

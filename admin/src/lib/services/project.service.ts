@@ -153,21 +153,29 @@ export class ProjectService {
   }
 
   async updateProject(id: string, updates: Partial<Project>): Promise<Project> {
-    const current = await this.projectRepo.find(id);
-    if (current) {
-      if ("video_url" in updates && current.video_url && current.video_url !== updates.video_url) {
-        await this.storageService.deleteByUrl(current.video_url);
-      }
-      if ("brochure_url" in updates && current.brochure_url && current.brochure_url !== updates.brochure_url) {
-        await this.storageService.deleteByUrl(current.brochure_url);
-      }
-      if ("thumbnail_url" in updates && current.thumbnail_url && current.thumbnail_url !== updates.thumbnail_url) {
-        await this.storageService.deleteByUrl(current.thumbnail_url);
-      }
-      if (updates.gallery_urls && Array.isArray(updates.gallery_urls) && current.gallery_urls) {
-        const removed = current.gallery_urls.filter(url => !updates.gallery_urls?.includes(url));
-        for (const url of removed) {
-          await this.storageService.deleteByUrl(url);
+    const hasMediaUpdates =
+      "video_url" in updates ||
+      "brochure_url" in updates ||
+      "thumbnail_url" in updates ||
+      "gallery_urls" in updates;
+
+    if (hasMediaUpdates) {
+      const current = await this.projectRepo.find(id);
+      if (current) {
+        if ("video_url" in updates && current.video_url && current.video_url !== updates.video_url) {
+          await this.storageService.deleteByUrl(current.video_url);
+        }
+        if ("brochure_url" in updates && current.brochure_url && current.brochure_url !== updates.brochure_url) {
+          await this.storageService.deleteByUrl(current.brochure_url);
+        }
+        if ("thumbnail_url" in updates && current.thumbnail_url && current.thumbnail_url !== updates.thumbnail_url) {
+          await this.storageService.deleteByUrl(current.thumbnail_url);
+        }
+        if (updates.gallery_urls && Array.isArray(updates.gallery_urls) && current.gallery_urls) {
+          const removed = current.gallery_urls.filter((url) => !updates.gallery_urls?.includes(url));
+          for (const url of removed) {
+            await this.storageService.deleteByUrl(url);
+          }
         }
       }
     }

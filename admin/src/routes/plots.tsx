@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { adminDb, type Plot, type Project } from "@/lib/adminDb";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Plus,
@@ -142,13 +143,15 @@ function Plots() {
     setSaving(true);
     try {
       if (modal === "create") {
-        await adminDb.plots.create(payload);
+        const created = await adminDb.plots.create(payload);
+        setItems((prev) => [created, ...prev]);
         toast.success("Plot created");
       } else if (modal && typeof modal === "object") {
-        await adminDb.plots.update((modal as Plot).id, payload);
+        const targetId = (modal as Plot).id;
+        const updated = await adminDb.plots.update(targetId, payload);
+        setItems((prev) => prev.map((x) => (x.id === targetId ? { ...x, ...payload, ...updated } : x)));
         toast.success("Plot updated");
       }
-      await fetchItems();
       closeModal();
     } catch (err: any) {
       toast.error(err.message);
@@ -568,21 +571,37 @@ function Plots() {
                           capture="environment"
                           className="hidden"
                           disabled={(form.images || []).length >= 4}
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
                             if (file.size > 5 * 1024 * 1024) {
                               toast.error("Image must be under 5 MB");
                               return;
                             }
-                            const reader = new FileReader();
-                            reader.onload = (ev) =>
+                            const toastId = toast.loading(`Uploading photo ${idx + 1}...`);
+                            try {
+                              const ext = file.name.split(".").pop() || "webp";
+                              const filePath = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+                              const { error: uploadErr } = await supabase.storage
+                                .from("plots")
+                                .upload(filePath, file, { contentType: file.type, upsert: true });
+
+                              if (uploadErr) throw uploadErr;
+
+                              const { data: { publicUrl } } = supabase.storage
+                                .from("plots")
+                                .getPublicUrl(filePath);
+
                               setForm((f) => ({
                                 ...f,
-                                images: [...(f.images || []), ev.target?.result as string],
+                                images: [...(f.images || []), publicUrl],
                               }));
-                            reader.readAsDataURL(file);
-                            e.target.value = "";
+                              toast.success(`Photo ${idx + 1} uploaded successfully`, { id: toastId });
+                            } catch (err: any) {
+                              toast.error(`Upload failed: ${err.message || "Unknown error"}`, { id: toastId });
+                            } finally {
+                              e.target.value = "";
+                            }
                           }}
                         />
                       </label>

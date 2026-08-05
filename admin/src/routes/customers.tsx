@@ -126,18 +126,16 @@ function Customers() {
     setSaving(true);
     try {
       if (modal === "create") {
-        await adminDb.customers.create(form);
+        const created = await adminDb.customers.create(form);
+        setItems((prev) => [created, ...prev]);
         toast.success("Customer added");
       } else if (modal) {
-        await adminDb.customers.update((modal as Customer).id, form);
+        const targetId = (modal as Customer).id;
+        const updated = await adminDb.customers.update(targetId, form);
+        setItems((prev) => prev.map((x) => (x.id === targetId ? { ...x, ...form, ...updated } : x)));
         toast.success("Customer updated");
       }
-      await fetchItems();
       closeModal();
-      if (selected) {
-        const updated = items.find((x) => x.id === (modal as Customer).id);
-        if (updated) setSelected(updated);
-      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -148,11 +146,12 @@ function Customers() {
   const remove = async (c: Customer) => {
     if (!confirm(`Delete customer ${c.name}?`)) return;
     try {
+      setItems((prev) => prev.filter((x) => x.id !== c.id));
       await adminDb.customers.delete(c.id);
-      await fetchItems();
       setSelected(null);
       toast.success("Deleted");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };

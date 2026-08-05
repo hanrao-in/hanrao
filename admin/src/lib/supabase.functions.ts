@@ -152,7 +152,7 @@ export const supabaseUpdateEnquiry = createServerFn({ method: "POST" })
   .validator((d) => z.object({ id: z.string(), data: z.record(z.any()) }).parse(d))
   .handler(async ({ data: { id, data: updates } }) => {
     const admin = await authService.verifyAdminAuth();
-    await customerService.updateEnquiry(id, updates);
+    const updated = await customerService.updateEnquiry(id, updates);
     await auditRepo.logAction({
       user_id: admin.userId,
       email: admin.email,
@@ -160,7 +160,7 @@ export const supabaseUpdateEnquiry = createServerFn({ method: "POST" })
       action: "update_enquiry",
       details: { enquiry_id: id, updates },
     });
-    return { ok: true };
+    return updated;
   });
 
 export const supabaseDeleteEnquiry = createServerFn({ method: "POST" })
@@ -256,17 +256,19 @@ export const supabaseSubmitSiteVisit = createServerFn({ method: "POST" })
       entity_id: sv.id,
     });
 
-    return { ok: true };
+    return { ok: true, id: sv.id };
   });
 
 export const supabaseUpdateSiteVisit = createServerFn({ method: "POST" })
   .validator((d) => z.object({ id: z.string(), data: z.record(z.any()) }).parse(d))
   .handler(async ({ data: { id, data: updates } }) => {
     const admin = await authService.verifyAdminAuth();
-    const { error } = await supabaseAdmin
+    const { data: updated, error } = await supabaseAdmin
       .from("site_visits")
       .update(updates as any)
-      .eq("id", id);
+      .eq("id", id)
+      .select()
+      .single();
 
     if (error) throw error;
 
@@ -278,7 +280,7 @@ export const supabaseUpdateSiteVisit = createServerFn({ method: "POST" })
       details: { site_visit_id: id, updates },
     });
 
-    return { ok: true };
+    return updated as unknown as SiteVisit;
   });
 
 export const supabaseDeleteSiteVisit = createServerFn({ method: "POST" })
@@ -332,14 +334,14 @@ export const supabaseCreateBooking = createServerFn({ method: "POST" })
       action: "create_booking",
       details: { booking_id: booking.id, data },
     });
-    return { ok: true, id: booking.id };
+    return booking;
   });
 
 export const supabaseUpdateBooking = createServerFn({ method: "POST" })
   .validator((d) => z.object({ id: z.string(), data: z.record(z.any()) }).parse(d))
   .handler(async ({ data: { id, data: updates } }) => {
     const admin = await authService.verifyAdminAuth();
-    await customerService.updateBooking(id, updates);
+    const updated = await customerService.updateBooking(id, updates);
     await auditRepo.logAction({
       user_id: admin.userId,
       email: admin.email,
@@ -347,7 +349,7 @@ export const supabaseUpdateBooking = createServerFn({ method: "POST" })
       action: "update_booking",
       details: { booking_id: id, updates },
     });
-    return { ok: true };
+    return updated;
   });
 
 export const supabaseDeleteBooking = createServerFn({ method: "POST" })
@@ -397,14 +399,14 @@ export const supabaseCreateCustomer = createServerFn({ method: "POST" })
       action: "create_customer",
       details: { customer_id: customer.id, data },
     });
-    return { ok: true, id: customer.id };
+    return customer;
   });
 
 export const supabaseUpdateCustomer = createServerFn({ method: "POST" })
   .validator((d) => z.object({ id: z.string(), data: z.record(z.any()) }).parse(d))
   .handler(async ({ data: { id, data: updates } }) => {
     const admin = await authService.verifyAdminAuth();
-    await customerService.updateCustomer(id, updates as any);
+    const updated = await customerService.updateCustomer(id, updates as any);
     await auditRepo.logAction({
       user_id: admin.userId,
       email: admin.email,
@@ -412,7 +414,7 @@ export const supabaseUpdateCustomer = createServerFn({ method: "POST" })
       action: "update_customer",
       details: { customer_id: id, updates },
     });
-    return { ok: true };
+    return updated;
   });
 
 export const supabaseDeleteCustomer = createServerFn({ method: "POST" })
@@ -517,14 +519,14 @@ export const supabaseCreateProject = createServerFn({ method: "POST" })
       action: "create_project",
       details: { project_id: project.id, name: project.name },
     });
-    return { ok: true, id: project.id };
+    return project;
   });
 
 export const supabaseUpdateProject = createServerFn({ method: "POST" })
   .validator((d) => z.object({ id: z.string(), data: z.record(z.any()) }).parse(d))
   .handler(async ({ data: { id, data: updates } }) => {
     const admin = await authService.verifyAdminAuth();
-    await projectService.updateProject(id, updates as any);
+    const updated = await projectService.updateProject(id, updates as any);
     await auditRepo.logAction({
       user_id: admin.userId,
       email: admin.email,
@@ -532,7 +534,7 @@ export const supabaseUpdateProject = createServerFn({ method: "POST" })
       action: "update_project",
       details: { project_id: id, updates },
     });
-    return { ok: true };
+    return updated;
   });
 
 export const supabaseDeleteProject = createServerFn({ method: "POST" })
@@ -581,14 +583,14 @@ export const supabaseCreatePlot = createServerFn({ method: "POST" })
       action: "create_plot",
       details: { plot_id: plot.id, plot_number: plot.plot_number },
     });
-    return { ok: true, id: plot.id };
+    return plot;
   });
 
 export const supabaseUpdatePlot = createServerFn({ method: "POST" })
   .validator((d) => z.object({ id: z.string(), data: z.record(z.any()) }).parse(d))
   .handler(async ({ data: { id, data: updates } }) => {
     const admin = await authService.verifyAdminAuth();
-    await projectService.updatePlot(id, updates as any);
+    const updated = await projectService.updatePlot(id, updates as any);
     await auditRepo.logAction({
       user_id: admin.userId,
       email: admin.email,
@@ -596,7 +598,7 @@ export const supabaseUpdatePlot = createServerFn({ method: "POST" })
       action: "update_plot",
       details: { plot_id: id, updates },
     });
-    return { ok: true };
+    return updated;
   });
 
 export const supabaseDeletePlot = createServerFn({ method: "POST" })

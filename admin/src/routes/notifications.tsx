@@ -81,25 +81,24 @@ function SiteVisitsAll() {
 
   const uncheckedCount = useMemo(() => items.filter((v) => !v.checked).length, [items]);
 
-  const updateStatus = async (v: SiteVisit, status: (typeof STATUSES)[number]) => {
-    setUpdating(v.id);
+  const updateStatus = async (v: SiteVisit, newStatus: string) => {
     try {
-      await adminDb.siteVisits.update(v.id, { status });
-      await fetchItems();
-      toast.success(`Marked as ${status}`);
+      setItems((prev) => prev.map((x) => (x.id === v.id ? { ...x, status: newStatus as any } : x)));
+      await adminDb.siteVisits.update(v.id, { status: newStatus as any });
+      toast.success(`Status updated to ${newStatus}`);
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
-    } finally {
-      setUpdating(null);
     }
   };
 
   const toggleChecked = async (v: SiteVisit, isChecked: boolean) => {
     try {
+      setItems((prev) => prev.map((x) => (x.id === v.id ? { ...x, checked: isChecked } : x)));
       await adminDb.siteVisits.update(v.id, { checked: isChecked });
-      await fetchItems();
       toast.success(isChecked ? "Marked as Checked" : "Marked as Unchecked");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };
@@ -107,25 +106,24 @@ function SiteVisitsAll() {
   const markAllAsChecked = async () => {
     const unchecked = items.filter((v) => !v.checked);
     if (unchecked.length === 0) return;
-    setLoading(true);
+    setItems((prev) => prev.map((v) => ({ ...v, checked: true })));
     try {
       await Promise.all(unchecked.map((v) => adminDb.siteVisits.update(v.id, { checked: true })));
-      await fetchItems();
       toast.success("All visits marked as checked");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
   const remove = async (v: SiteVisit) => {
     if (!confirm(`Delete site visit from ${v.name}?`)) return;
     try {
+      setItems((prev) => prev.filter((x) => x.id !== v.id));
       await adminDb.siteVisits.delete(v.id);
-      await fetchItems();
       toast.success("Deleted");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };

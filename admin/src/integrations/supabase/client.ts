@@ -146,12 +146,14 @@ function createNoOpProxy(): any {
 function createSupabaseClient() {
   const SUPABASE_URL =
     (typeof import.meta !== "undefined" ? import.meta.env?.VITE_SUPABASE_URL : undefined) ||
-    (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_URL : undefined);
+    (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : undefined);
   const SUPABASE_PUBLISHABLE_KEY =
     (typeof import.meta !== "undefined"
-      ? import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY
+      ? import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.VITE_SUPABASE_ANON_KEY
       : undefined) ||
-    (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_PUBLISHABLE_KEY : undefined);
+    (typeof process !== "undefined"
+      ? process.env?.VITE_SUPABASE_PUBLISHABLE_KEY || process.env?.SUPABASE_SERVICE_ROLE_KEY || process.env?.SUPABASE_ANON_KEY
+      : undefined);
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [

@@ -189,12 +189,14 @@ function Projects() {
 
       if (modal === "create") {
         const n = await adminDb.projects.create(finalForm);
+        setItems((prev) => [n, ...prev]);
         toast.success(`"${n.name}" created`);
       } else if (modal) {
-        await adminDb.projects.update((modal as Project).id, finalForm);
+        const targetId = (modal as Project).id;
+        const updated = await adminDb.projects.update(targetId, finalForm);
+        setItems((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...finalForm, ...updated } : item)));
         toast.success("Project updated");
       }
-      await fetchItems();
       closeModal();
     } catch (err: any) {
       toast.error(err.message);
@@ -207,10 +209,11 @@ function Projects() {
     e.stopPropagation();
     if (!confirm(`Delete "${p.name}"?`)) return;
     try {
+      setItems((prev) => prev.filter((item) => item.id !== p.id));
       await adminDb.projects.delete(p.id);
-      await fetchItems();
       toast.success("Deleted");
     } catch (err: any) {
+      fetchItems();
       toast.error(err.message);
     }
   };
