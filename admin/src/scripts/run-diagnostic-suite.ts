@@ -101,7 +101,7 @@ async function runFullDiagnosticSuite() {
     operation: string,
     entity: string,
     type: "Read" | "Write",
-    apiFn: () => Promise<T>
+    apiFn: () => PromiseLike<T>
   ): Promise<RunMetric> {
     const correlationId = genCorrelationId();
     const coldDurations: number[] = [];
